@@ -32,13 +32,13 @@ def lexicalfeats(sent, i) :
 	feats = [
 			"isNumeric=%s" % token.is_alpha,
 			"POS=" + token.pos_,
-			"verbType=" + token.tag_ if token.pos_ == "VERB" else "nil",
-			"whichModalAmI=" + token if token.tag_ == "MD" else "nil",
-			"amVBwithDaughterTo=%s" % token.pos_ == "VERB" and "to" in daughters,
-			"haveDaughterPerfect=%s" % "has" in daughters or "have" in daughters or "had" in daughters, #check if labeled as modal
-			"haveDaughterShould=%s" % "should" in daughters,
-			"haveDaughterWh=%s" % "where" in daughters or "when" in daughters or "while" in daughters or "who" in daughters or "why" in daughters,
-			"haveReportingAncestor=%s" % token.pos_=="VERB" and len(lemmas.intersection(ancestors))!=0,
+			"verbType=" + (token.tag_ if token.pos_ == "VERB" else "nil"),
+			"whichModalAmI=" + (token if token.tag_ == "MD" else "nil"),
+			"amVBwithDaughterTo=%s" % (token.pos_ == "VERB" and "to" in daughters),
+			"haveDaughterPerfect=%s" % ("has" in daughters or "have" in daughters or "had" in daughters),
+			"haveDaughterShould=%s" % ("should" in daughters),
+			"haveDaughterWh=%s" % ("where" in daughters or "when" in daughters or "while" in daughters or "who" in daughters or "why" in daughters),
+			"haveReportingAncestor=%s" % (token.pos_=="VERB" and len(lemmas.intersection(ancestors))!=0),
 			"parentPOS=" + token.head.pos_,
 			"whichAuxIsMyDaughter=" + auxdaughter,
 			"whichModalIsMyDaughter=" + moddaughter
@@ -106,7 +106,7 @@ def basicfeats(sent):
 	entity = len(sent.ents)
 
 	for word in sent:
-		print(word, word.shape_)
+#		print(word, word.shape_)
 		if word.shape_[0] == "X":
 			cap += 1
 	cap /= length
@@ -124,6 +124,6 @@ if __name__ == "__main__":
 	doc = nlp(sys.argv[1])
 
 	for x in range(len(doc)):
-		print(lexicalfeats(sent, x))
+		print(lexicalfeats(doc, x))
 	
 	print(basicfeats(doc))	
