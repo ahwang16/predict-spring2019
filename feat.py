@@ -14,8 +14,7 @@ import os, sys
 
 # taken from committed belief paper
 # For the ith word in a sentence, return list of lexical features
-'''
-def lexicalfeats(sent, i, feature) :
+def lexicalfeats(sent, i) :
 	token = sent[i]
 	#	print(sent, i)
 	#	print("token:", token, ", token type:", type(token), ", sent type:", type(sent))
@@ -44,7 +43,9 @@ def lexicalfeats(sent, i, feature) :
 			"whichAuxIsMyDaughter=" + auxdaughter,
 			"whichModalIsMyDaughter=" + moddaughter
 		]
-'''
+
+	return feats
+
 '''
 	feats = []
 	# lexical and syntactic features with no context
@@ -121,5 +122,8 @@ def basicfeats(sent):
 if __name__ == "__main__":
 	nlp = spacy.load("en")
 	doc = nlp(sys.argv[1])
+
+	for x in range(len(doc)):
+		print(lexicalfeats(sent, x))
 	
 	print(basicfeats(doc))	
