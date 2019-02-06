@@ -7,13 +7,14 @@ from sklearn.preprocessing import LabelBinarizer
 import sklearn
 import pycrfsuite
 import spacy
-import parsexml
+#import parsexml
 from collections import Counter
 import os, sys
 
 
 # taken from committed belief paper
 # For the ith word in a sentence, return list of lexical features
+'''
 def lexicalfeats(sent, i, feature) :
 	token = sent[i]
 	#	print(sent, i)
@@ -43,7 +44,8 @@ def lexicalfeats(sent, i, feature) :
 			"whichAuxIsMyDaughter=" + auxdaughter,
 			"whichModalIsMyDaughter=" + moddaughter
 		]
-	'''
+'''
+'''
 	feats = []
 	# lexical and syntactic features with no context
 	if feature == 0:
@@ -92,23 +94,23 @@ def lexicalfeats(sent, i, feature) :
 			"haveDaughterWh=%s" % str("where" in daughters or "when" in daughters or "while" in daughters or "who" in daughters or "why" in daughters),
 			"haveDaughterShould=%s" % str("should" in daughters)
 		]
-	'''
+'''
 
 
 # taken from salience paper
 def basicfeats(sent):
 	length = len(sent)
 
-	alpha = 0
+	cap = 0
 	entity = len(sent.ents)
 
 	for word in sent:
-		if word.is_alpha:
-			alpha += 1
+		print(word, word.shape_)
+		if word.shape_[0] == "X":
+			cap += 1
+	cap /= length
 
-	alpha /= length
-
-	return ["sentLength=" + str(length), "alpha=" + str(alpha), "entity=" + entity]
+	return ["sentLength=" + str(length), "capital=" + str(cap), "entity=" + str(entity)]
 
 
 
@@ -118,6 +120,6 @@ def basicfeats(sent):
 
 if __name__ == "__main__":
 	nlp = spacy.load("en")
-	doc = nlp(argv[1])
-
-	print(basicfeats(list(doc.sents[0])))
+	doc = nlp(sys.argv[1])
+	
+	print(basicfeats(doc))	
