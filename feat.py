@@ -29,20 +29,35 @@ def lexicalfeats(sent, i) :
 		if c.tag_ == "MD":
 			moddaughter = c.text
 
-	feats = [
-			"isNumeric=%s" % token.is_alpha,
-			"POS=" + token.pos_,
-			"verbType=" + token.tag_ if token.pos_ == "VERB" else "nil",
-			"whichModalAmI=" + token if token.tag_ == "MD" else "nil",
-			"amVBwithDaughterTo=%s" % token.pos_ == "VERB" and "to" in daughters,
-			"haveDaughterPerfect=%s" % "has" in daughters or "have" in daughters or "had" in daughters, #check if labeled as modal
-			"haveDaughterShould=%s" % "should" in daughters,
-			"haveDaughterWh=%s" % "where" in daughters or "when" in daughters or "while" in daughters or "who" in daughters or "why" in daughters,
-			"haveReportingAncestor=%s" % token.pos_=="VERB" and len(lemmas.intersection(ancestors))!=0,
-			"parentPOS=" + token.head.pos_,
-			"whichAuxIsMyDaughter=" + auxdaughter,
-			"whichModalIsMyDaughter=" + moddaughter
-		]
+	# feats = [
+	# 		"isNumeric=%s" % token.is_alpha,
+	# 		"POS=" + token.pos_,
+	# 		"verbType=" + token.tag_ if token.pos_ == "VERB" else "nil",
+	# 		"whichModalAmI=" + token if token.tag_ == "MD" else "nil",
+	# 		"amVBwithDaughterTo=%s" % token.pos_ == "VERB" and "to" in daughters,
+	# 		"haveDaughterPerfect=%s" % "has" in daughters or "have" in daughters or "had" in daughters, #check if labeled as modal
+	# 		"haveDaughterShould=%s" % "should" in daughters,
+	# 		"haveDaughterWh=%s" % "where" in daughters or "when" in daughters or "while" in daughters or "who" in daughters or "why" in daughters,
+	# 		"haveReportingAncestor=%s" % token.pos_=="VERB" and len(lemmas.intersection(ancestors))!=0,
+	# 		"parentPOS=" + token.head.pos_,
+	# 		"whichAuxIsMyDaughter=" + auxdaughter,
+	# 		"whichModalIsMyDaughter=" + moddaughter
+	# 	]
+
+	feats = {
+		"isNumeric" : token.is_alpha,
+		"POS" : token.pos_,
+		"verbType" : token.tag_ if token.pos_ == "VERB" else "nil",
+		"whichModalAmI" : token if token.tag_ == "MD" else "nil",
+		"amVBwithDaughterTo" : token.pos_ == "VERB" and "to" in daughters,
+		"haveDaughterPerfect" : ("has" in daughters or "have" in daughters or "had" in daughters),
+		"haveDaughterShould" : "should" in daughters,
+		"haveDaughterWh" : ("where" in daughters or "when" in daughters or "while" in daughters or "who" in daughters or "why" in daughters),
+		"haveReportingAncestor" : (token.pos_ == "VERB" and len(lemmas.intersection(ancestors))),
+		"parentPOS" : token.head.pos_,
+		"whichAuxIsMyDaughter" : auxdaughter,
+		"whichModalIsMyDaughter" : moddaughter
+	}
 
 	return feats
 
@@ -111,7 +126,11 @@ def basicfeats(sent):
 			cap += 1
 	cap /= length
 
-	return ["sentLength=" + str(length), "capital=" + str(cap), "entity=" + str(entity)]
+	return {
+		"sentLength" : length,
+		"capital" : cap,
+		"entity" : entity
+	}
 
 
 
