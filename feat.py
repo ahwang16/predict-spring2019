@@ -121,7 +121,7 @@ def basicfeats(sent):
 	entity = len(sent.ents)
 
 	for word in sent:
-		print(word, word.shape_)
+#		print(word, word.shape_)
 		if word.shape_[0] == "X":
 			cap += 1
 	cap /= length
@@ -143,6 +143,6 @@ if __name__ == "__main__":
 	doc = nlp(sys.argv[1])
 
 	for x in range(len(doc)):
-		print(lexicalfeats(sent, x))
+		print(lexicalfeats(doc, x))
 	
 	print(basicfeats(doc))	
