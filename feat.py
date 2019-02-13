@@ -18,99 +18,41 @@ def lexicalfeats(sent, i) :
 	token = sent[i]
 	#	print(sent, i)
 	#	print("token:", token, ", token type:", type(token), ", sent type:", type(sent))
-	daughters = {c.text.lower() for c in token.children}
-	ancestors = {h.lemma_.lower() for h in token.ancestors}
-	lemmas = {"tell", "accuse", "insist", "seem", "believe", "say", "find", "conclude", "claim", "trust", "think", "suspect", "doubt", "suppose"}
-	auxdaughter = "nil"
-	moddaughter = "nil"
-	for c in token.children:
-		if c.pos_ == "AUX":
-			auxdaughter = c.text
-		if c.tag_ == "MD":
-			moddaughter = c.text
+	# daughters = {c.text.lower() for c in token.children}
+	# ancestors = {h.lemma_.lower() for h in token.ancestors}
+	# lemmas = {"tell", "accuse", "insist", "seem", "believe", "say", "find", "conclude", "claim", "trust", "think", "suspect", "doubt", "suppose"}
+	# auxdaughter = "nil"
+	# moddaughter = "nil"
+	# for c in token.children:
+	# 	if c.pos_ == "AUX":
+	# 		auxdaughter = c.text
+	# 	if c.tag_ == "MD":
+	# 		moddaughter = c.text
 
-	# feats = [
-	# 		"isNumeric=%s" % token.is_alpha,
-	# 		"POS=" + token.pos_,
-	# 		"verbType=" + token.tag_ if token.pos_ == "VERB" else "nil",
-	# 		"whichModalAmI=" + token if token.tag_ == "MD" else "nil",
-	# 		"amVBwithDaughterTo=%s" % token.pos_ == "VERB" and "to" in daughters,
-	# 		"haveDaughterPerfect=%s" % "has" in daughters or "have" in daughters or "had" in daughters, #check if labeled as modal
-	# 		"haveDaughterShould=%s" % "should" in daughters,
-	# 		"haveDaughterWh=%s" % "where" in daughters or "when" in daughters or "while" in daughters or "who" in daughters or "why" in daughters,
-	# 		"haveReportingAncestor=%s" % token.pos_=="VERB" and len(lemmas.intersection(ancestors))!=0,
-	# 		"parentPOS=" + token.head.pos_,
-	# 		"whichAuxIsMyDaughter=" + auxdaughter,
-	# 		"whichModalIsMyDaughter=" + moddaughter
-	# 	]
+	# feats = {
+	# 	"isNumeric" : not token.is_alpha,
+	# 	"POS" : token.pos_,
+	# 	"verbType" : token.tag_ if token.pos_ == "VERB" else "nil",
+	# 	"whichModalAmI" : token if token.tag_ == "MD" else "nil",
+	# 	"amVBwithDaughterTo" : token.pos_ == "VERB" and "to" in daughters,
+	# 	"haveDaughterPerfect" : ("has" in daughters or "have" in daughters or "had" in daughters),
+	# 	"haveDaughterShould" : "should" in daughters,
+	# 	"haveDaughterWh" : ("where" in daughters or "when" in daughters or "while" in daughters or "who" in daughters or "why" in daughters),
+	# 	"haveReportingAncestor" : (token.pos_ == "VERB" and len(lemmas.intersection(ancestors))),
+	# 	"parentPOS" : token.head.pos_,
+	# 	"whichAuxIsMyDaughter" : auxdaughter,
+	# 	"whichModalIsMyDaughter" : moddaughter
+	# }
 
-	feats = {
-		"isNumeric" : token.is_alpha,
-		"POS" : token.pos_,
-		"verbType" : token.tag_ if token.pos_ == "VERB" else "nil",
-		"whichModalAmI" : token if token.tag_ == "MD" else "nil",
-		"amVBwithDaughterTo" : token.pos_ == "VERB" and "to" in daughters,
-		"haveDaughterPerfect" : ("has" in daughters or "have" in daughters or "had" in daughters),
-		"haveDaughterShould" : "should" in daughters,
-		"haveDaughterWh" : ("where" in daughters or "when" in daughters or "while" in daughters or "who" in daughters or "why" in daughters),
-		"haveReportingAncestor" : (token.pos_ == "VERB" and len(lemmas.intersection(ancestors))),
-		"parentPOS" : token.head.pos_,
-		"whichAuxIsMyDaughter" : auxdaughter,
-		"whichModalIsMyDaughter" : moddaughter
-	}
 
-	return feats
+	isNumeric = not token.is_alpha
+	pos = token.pos_
+	verbType = token.tag_ if token.pos_ == "VERB" else "nil"
+	modal = token.tag_ == "MD"
 
-'''
-	feats = []
-	# lexical and syntactic features with no context
-	if feature == 0:
-		feats = [
-			"POS=" + token.pos_,
-			"whichModalAmI=" + token.text if token.tag_ == "MD" else "nil",
-			"parentPOS=" + token.head.pos_,
 
-		]
 
-	# lexical features with context
-	elif feature == 1:
-		feats = [
-			"POS=" + token.pos_,
-			"whichModalAmI=" + token.text if token.tag_ == "MD" else "nil",
-			"verbType=" + token.tag_ if token.pos_ == "VERB" else "nil",
-			"isNumeric%s" % str(token.is_alpha),
-			"haveReportingAncestor=%s" % str(token.pos_=="VERB" and len(lemmas.intersection(ancestors))!=0),
-			"whichModalIsMyDaughter=" + moddaughter,
-			"whichAuxIsMyDaughter=" + auxdaughter,
-			"haveDaughterShould=%s" % str("should" in daughters)
-		]
-
-	# lexical features with context and syntactic features with no context
-	elif feature == 2:
-		feats = [
-			"POS=" + token.pos_,
-			"whichModalAmI=" + token.text if token.tag_ == "MD" else "nil",
-			"parentPOS=" + token.head.pos_,
-			"haveReportingAncestor=%s" % str(token.pos_=="VERB" and len(lemmas.intersection(ancestors))!=0),
-			"whichModalIsMyDaughter=" + moddaughter,
-			"whichAuxIsMyDaughter=" + auxdaughter,
-			"haveDaughterShould=%s" % str("should" in daughters)
-		]
-
-	# lexical and syntactic features with context
-	elif feature == 3:
-		feats = [
-			"POS=" + token.pos_,
-			"whichModalAmI=" + token.text if token.tag_ == "MD" else "nil",
-			"parentPOS=" + token.head.pos_,
-			"haveReportingAncestor=%s" % str(token.pos_=="VERB" and len(lemmas.intersection(ancestors))!=0),
-			"whichModalIsMyDaughter=" + moddaughter,
-			"haveDaughterPerfect=%s" % str("has" in daughters or "have" in daughters or "had" in daughters),
-			"whichAuxIsMyDaughter=" + auxdaughter,
-			"haveDaughterWh=%s" % str("where" in daughters or "when" in daughters or "while" in daughters or "who" in daughters or "why" in daughters),
-			"haveDaughterShould=%s" % str("should" in daughters)
-		]
-'''
+	return isNumeric, pos, verbType, modal
 
 
 # taken from salience paper
@@ -126,23 +68,45 @@ def basicfeats(sent):
 			cap += 1
 	cap /= length
 
-	return {
-		"sentLength" : length,
-		"capital" : cap,
-		"entity" : entity
-	}
+	# return {
+	# 	"sentLength" : length,
+	# 	"capital" : cap,
+	# 	"entity" : entity
+	# }
 
-
-
-
-
+	return length, capital, entity
 
 
 if __name__ == "__main__":
 	nlp = spacy.load("en")
 	doc = nlp(sys.argv[1])
 
+	isNumeric = False
+	pos = {}
+	postags = ['PUNCT', 'SYM', 'X', 'ADJ', 'VERB', 'CONJ', 'NUM', 'DET', 'ADV',
+			   'NOUN', 'PROPN', 'PART', 'PRON', 'SPACE', 'INTJ', ]
+	for tag in postags:
+		pos[tag] = 0
+	verbType = ""
+	modal = False
+
 	for x in range(len(doc)):
-		print(lexicalfeats(doc, x))
+		isNumeric_, pos_, verbType_, modal_ = lexicalfeats(doc, x)
+
+		isNumeric = isNumeric or isNumeric_
+		pos[pos_] += 1
+		if verbType_ is not "nil":
+			verbType = verbType_
+		modal = modal or modal_
 	
-	print(basicfeats(doc))	
+	length, capital, entity = basicfeats(doc)
+
+	feat = {
+		"isNumeric" : isNumeric,
+		"verbType" : verbType,
+		"modal" : modal
+	}
+
+	for p in pos:
+		feat[p] = pos[p]
+		
