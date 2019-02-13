@@ -7,6 +7,7 @@
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.svm import SVC
 from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import LogisticRegression
 #import sklearn
 #import pycrfsuite
 import spacy
@@ -89,6 +90,8 @@ def features(filename):
 		for line in infile:
 			# NEED TO DO SOME PROCESSING FOR THE LABELS
 			claim, label = line.split('\t')
+			if len(claim) == 0:
+				continue
 			doc = nlp(claim)
 
 			isNumeric = False
@@ -129,18 +132,27 @@ def features(filename):
 	return feats, labels
 
 
+def svm(X, y, c=1.0):
+
+	clf = SVC(C=c, gamma='auto')
+	return cross_val_score(clf, X, y, cv=5)
+
+	
+def logreg(X, y):
+	clf = LogisticRegression()
+	return cross_val_score(clf, X, y, cv=5)
+
 
 if __name__ == "__main__":
-	feats, y = feats(sys.argv[1])
+	feats, y = features(sys.argv[1])
 
 	v = DictVectorizer(sparse=False)
 	X = v.fit_transform(feats)
 
-	clf = SVC(gamma='auto')
-	clf.fit(X, y)
-
-	scores = cross_val_scores(clf, X, y, cv=5)
-	print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+	scores = [svm(X, y), logreg(X, y)]
+	
+	for score in scores:
+		print("Accuracy: %0.2f (+/- %0.2f)" % (score.mean(), score.std() * 2))
 
 
 
