@@ -1,14 +1,17 @@
 # features to extract from sentences
 
-from itertools import chain
-import nltk
-from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.preprocessing import LabelBinarizer
-import sklearn
-import pycrfsuite
+#from itertools import chain
+#import nltk
+#from sklearn.metrics import classification_report, confusion_matrix
+#from sklearn.preprocessing import LabelBinarizer
+from sklearn.feature_extraction import DictVectorizer
+from sklearn.svm import SVC
+from sklearn.model_selection import cross_val_score
+#import sklearn
+#import pycrfsuite
 import spacy
 #import parsexml
-from collections import Counter
+from collections import Counter, defaultdict
 import os, sys
 
 
@@ -45,7 +48,7 @@ def lexicalfeats(sent, i) :
 	# }
 
 
-	isNumeric = not token.is_alpha
+	isNumeric = token.is_digit
 	pos = token.pos_
 	verbType = token.tag_ if token.pos_ == "VERB" else "nil"
 	modal = token.tag_ == "MD"
@@ -67,46 +70,89 @@ def basicfeats(sent):
 		if word.shape_[0] == "X":
 			cap += 1
 	cap /= length
-
+	entity /= length
 	# return {
 	# 	"sentLength" : length,
 	# 	"capital" : cap,
 	# 	"entity" : entity
 	# }
 
-	return length, capital, entity
+	return length, cap, entity
+
+
+# returns list of dictionaries (feats) and list of labels (int)
+def features(filename):
+	nlp = spacy.load("en")
+	feats = []
+	labels = []
+	with open(filename, "r") as infile:
+		for line in infile:
+			# NEED TO DO SOME PROCESSING FOR THE LABELS
+			claim, label = line.split('\t')
+			doc = nlp(claim)
+
+			isNumeric = False
+			pos = defaultdict(int)
+			postags = ['ADJ', 'ADV', 'INTJ', 'NOUN', 'PROPN', 'VERB', 'ADP', 'AUX',
+				   'CCONJ', 'DET', 'NUM', 'PART', 'PRON', 'SCONJ', 'PUNCT', 'SYM', 'X']
+			for tag in postags:
+				pos[tag] = 0
+			verbType = "nil"
+			modal = False
+
+			for x in range(len(doc)):
+				isNumeric_, pos_, verbType_, modal_ = lexicalfeats(doc, x)
+		#		print(doc[x], isNumeric_, pos_, verbType_, modal_)
+				isNumeric = isNumeric or isNumeric_
+				pos[pos_] += 1
+				if verbType_ is not "nil":
+					verbType = verbType_
+				modal = modal or modal_
+			
+			length, capital, entity = basicfeats(doc)
+
+			feat = {
+				"isNumeric" : isNumeric,
+				"verbType" : verbType,
+				"modal" : modal,
+				"length" : length,
+				"capital" : capital,
+				"entity" : entity
+			}
+
+			for p in pos:
+				feat[p] = pos[p]
+
+			feats.append(feat)
+			labels.append(label)
+
+	return feats, labels
+
 
 
 if __name__ == "__main__":
-	nlp = spacy.load("en")
-	doc = nlp(sys.argv[1])
+	feats, y = feats(sys.argv[1])
 
-	isNumeric = False
-	pos = {}
-	postags = ['PUNCT', 'SYM', 'X', 'ADJ', 'VERB', 'CONJ', 'NUM', 'DET', 'ADV',
-			   'NOUN', 'PROPN', 'PART', 'PRON', 'SPACE', 'INTJ', ]
-	for tag in postags:
-		pos[tag] = 0
-	verbType = ""
-	modal = False
+	v = DictVectorizer(sparse=False)
+	X = v.fit_transform(feats)
 
-	for x in range(len(doc)):
-		isNumeric_, pos_, verbType_, modal_ = lexicalfeats(doc, x)
+	clf = SVC(gamma='auto')
+	clf.fit(X, y)
 
-		isNumeric = isNumeric or isNumeric_
-		pos[pos_] += 1
-		if verbType_ is not "nil":
-			verbType = verbType_
-		modal = modal or modal_
-	
-	length, capital, entity = basicfeats(doc)
+	scores = cross_val_scores(clf, X, y, cv=5)
+	print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
-	feat = {
-		"isNumeric" : isNumeric,
-		"verbType" : verbType,
-		"modal" : modal
-	}
 
-	for p in pos:
-		feat[p] = pos[p]
-		
+
+
+
+
+
+
+
+
+
+
+
+
+
