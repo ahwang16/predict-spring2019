@@ -1,2 +1,7 @@
 SVM C=1.0 Accuracy: 0.67 (+/- 0.04)
 logistic regression: Accuracy: 0.68 (+/- 0.03)
+
+
+claimprenonarg
+Accuracy: 0.60 (+/- 0.04)
+Accuracy: 0.60 (+/- 0.04)

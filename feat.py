@@ -15,7 +15,7 @@ import spacy
 from collections import Counter, defaultdict
 import os, sys
 
-
+ewe = {}
 # taken from committed belief paper
 # For the ith word in a sentence, return list of lexical features
 def lexicalfeats(sent, i) :
@@ -100,6 +100,7 @@ def features(filename):
 				   'CCONJ', 'DET', 'NUM', 'PART', 'PRON', 'SCONJ', 'PUNCT', 'SYM', 'X']
 			for tag in postags:
 				pos[tag] = 0
+				print(tag)
 			verbType = "nil"
 			modal = False
 
@@ -132,6 +133,13 @@ def features(filename):
 	return feats, labels
 
 
+def ewe(filename):
+	with open(filename, "r") as infile:
+		for line in infile:
+			l = line.strip().split()
+			ewe[l[0]] = [float(n) for n in l[1:]] 
+
+
 def svm(X, y, c=1.0):
 
 	clf = SVC(C=c, gamma='auto')
@@ -145,6 +153,8 @@ def logreg(X, y):
 
 if __name__ == "__main__":
 	feats, y = features(sys.argv[1])
+
+	ewe("ewe_uni.txt")
 
 	v = DictVectorizer(sparse=False)
 	X = v.fit_transform(feats)
