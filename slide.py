@@ -5,6 +5,10 @@ Method to calculate pleasantness score of phrase modified from sentiment
 paper. Use DAL to assign score for each word, finite state machine to handle
 negations, normalize by length of phrase.
 '''
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 
 daldict = {}
 
@@ -136,6 +140,9 @@ def parse():
 				idioms.append(l[0])
 
 				print(l[0], s, d)
+
+	plt.scatter(s_scores, d_scores)
+	plt.savefig('fig.png')
 
 
 if __name__ == "__main__":
