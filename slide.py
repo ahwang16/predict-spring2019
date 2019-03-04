@@ -25,10 +25,10 @@ def assign_pleasant(sent):
 
 	for t in tokens:
 		try:
-			t.append(daldict[t][0])
+			pleasant.append(daldict[t][0])
 			length += 1
 		except:
-			t.append(0)
+			pleasant.append(0)
 
 	return pleasant
 
@@ -40,7 +40,6 @@ def assign_pleasant(sent):
 # scores: vector of DAL pleasantness scores
 # return updated pleasant scores
 def fsm_negate(sent, scores):
-
 	# search for list of negation words --> look at 2005 paper on contextual polarity
 	# expand example of negation words https://www.grammarly.com/blog/negatives/
 	# on the word wont: one's customary behavior in a particular situation.
@@ -114,7 +113,6 @@ def normalize_dal(p):
 # :return: single value for entire phrase (sum of values normalized by phrase length)
 def dal_score(sent):
 	scores = normalize_dal(fsm_negate(sent, assign_pleasant(sent)))
-
 	return sum(scores) / len(scores)
 
 
@@ -123,6 +121,8 @@ def parse():
 		s_scores = []
 		d_scores = []
 		idioms = []
+
+		next(infile)
 
 		for line in infile:
 			l = line.split("\t")
@@ -139,6 +139,7 @@ def parse():
 
 
 if __name__ == "__main__":
+	dal()
 	parse()
 
 
