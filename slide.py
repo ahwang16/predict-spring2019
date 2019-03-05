@@ -105,6 +105,9 @@ def fsm_negate(sent, scores):
 # pleasantness: mean 1.85, stdev 0.36
 # :return: array of Z-normalized scores
 def normalize_dal(p):
+	if sum(p) == 0:
+		return None
+
 	meanp, stdevp = 1.85, 0.36
 	for x in range(len(p)):
 		p[x] = (p[x] - meanp) / stdevp
@@ -117,7 +120,10 @@ def normalize_dal(p):
 # :return: single value for entire phrase (sum of values normalized by phrase length)
 def dal_score(sent):
 	scores = normalize_dal(fsm_negate(sent, assign_pleasant(sent)))
-	return sum(scores) / len(scores)
+	
+	if scores:
+		return sum(scores) / len(scores)
+	return None
 
 
 def parse():
@@ -142,6 +148,9 @@ def parse():
 				s = float(l[7]) - float(l[9])
 				d = dal_score(l[0])
 
+				if d is None:
+					continue
+
 				s_scores.append(s)
 				d_scores.append(d)
 				idioms.append(l[0])
@@ -152,6 +161,7 @@ def parse():
 	plt.scatter(s_scores, d_scores, c=s_senti)
 	plt.xlabel("SLIDE positive percent")
 	plt.ylabel("DAL pleasantness index")
+	plt.legend()
 	plt.savefig('fig.png')
 
 
