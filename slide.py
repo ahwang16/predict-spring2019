@@ -26,7 +26,6 @@ def dal():
 def assign_pleasant(sent):
 	tokens = sent.split()
 	pleasant = []
-
 	for t in tokens:
 		try:
 			pleasant.append(daldict[t][0])
@@ -78,9 +77,8 @@ def fsm_negate(sent, scores):
 	# state is True for RETAIN and False for INVERT
 	# start with RETAIN
 	state = False
-
 	index = 0 # to reference corresponding pleasantness score in scores
-	for word in sent:
+	for word in sent.split():
 		# RETAIN: leave score
 		# switch to INVERT if current word is a negation
 		if state: # RETAIN
