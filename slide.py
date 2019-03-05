@@ -125,8 +125,15 @@ def parse():
 		s_scores = []
 		d_scores = []
 		idioms = []
+		s_senti = []
 
+		sentiment = { "positive" : "r",
+			      "negative" : "b",
+			      "neutral" : "g",
+			      "inappropriate" : "y" }
 		next(infile)
+
+		
 
 		for line in infile:
 			l = line.split("\t")
@@ -138,10 +145,11 @@ def parse():
 				s_scores.append(s)
 				d_scores.append(d)
 				idioms.append(l[0])
+				s_senti.append(sentiment[l[10]])
 
-				print(l[0], s, d)
+				print(l[0], s, d, l[10])
 
-	plt.scatter(s_scores, d_scores)
+	plt.scatter(s_scores, d_scores, c=s_senti)
 	plt.xlabel("SLIDE positive percent")
 	plt.ylabel("DAL pleasantness index")
 	plt.savefig('fig.png')
