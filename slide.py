@@ -8,6 +8,7 @@ negations, normalize by length of phrase.
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from nltk.corpus import wordnet as wn
 
 
 daldict = {}
@@ -30,13 +31,17 @@ def assign_pleasant(sent):
 		try:
 			pleasant.append(daldict[t][0])
 		except:
-			pleasant.append(pleasant(t))
+			pleasant.append(try_pleasant(t))
 
 	return pleasant
 
 
-def pleasant(word):
-	syns = wn.synsets(word)
+def try_pleasant(word):
+	try:
+		syns = wn.synsets(word)
+	except:
+		return 0
+
 	setlen = len(syns)
 	synlen = len(syns[0])
 	x, y = 0
@@ -57,8 +62,10 @@ def pleasant(word):
 			if ants:
 				for a in ants:
 					try:
-						return -1 * daldaldict[a.name()][0]
-	return 0.0
+						return (-1 * daldict[a.name()][0])
+					except:
+						pass
+	return 0
 
 
 # finite state machine to RETAIN or INVERT (negation)
