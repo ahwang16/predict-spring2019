@@ -145,7 +145,7 @@ def parse():
 			l = line.split("\t")
 
 			if l[11] != "X":
-				s = float(l[7]) - float(l[9])
+				s = float(l[7]) - float(l[9]) - float(l[8])
 				d = dal_score(l[0])
 
 				if d is None:
