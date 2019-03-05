@@ -30,7 +30,6 @@ def assign_pleasant(sent):
 	for t in tokens:
 		try:
 			pleasant.append(daldict[t][0])
-			length += 1
 		except:
 			pleasant.append(0)
 
@@ -82,16 +81,16 @@ def fsm_negate(sent, scores):
 
 	index = 0 # to reference corresponding pleasantness score in scores
 	for word in sent:
-		# INVERT: negate score
-		# switch to RETAIN if current word is but or a comparative degree adjective
-		if state:
-			scores[index] *= -1
-			state = not (word=="but" or word in comp_adj)
-		
 		# RETAIN: leave score
 		# switch to INVERT if current word is a negation
+		if state: # RETAIN
+			state = word not in negate
+
+		# INVERSE: negate score
+		# switch to RETAIN if current word is but or a comparative degree adjective
 		else:
-			state = word in comp_adj
+			scores[index] *= -1
+			state = word=="but" or word in comp_adj
 
 		index += 1
 
