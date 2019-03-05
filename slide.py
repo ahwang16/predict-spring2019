@@ -132,7 +132,7 @@ def parse():
 			l = line.split("\t")
 
 			if l[11] != "X":
-				s = float(l[7])
+				s = float(l[7]) - float(l[9])
 				d = dal_score(l[0])
 
 				s_scores.append(s)
