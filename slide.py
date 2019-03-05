@@ -30,9 +30,35 @@ def assign_pleasant(sent):
 		try:
 			pleasant.append(daldict[t][0])
 		except:
-			pleasant.append(0)
+			pleasant.append(pleasant(t))
 
 	return pleasant
+
+
+def pleasant(word):
+	syns = wn.synsets(word)
+	setlen = len(syns)
+	synlen = len(syns[0])
+	x, y = 0
+
+	while x < setlen:
+		while y < synlen:
+			try:
+				return daldict[syns[x].lemmas()[y].name()][0]
+			except:
+				y += 1
+		y = 0
+		x += 1
+		synlen = len(syns[x])
+
+	for syn in syns:
+		for l in syn.lemmas():
+			ants = l.antonyms()
+			if ants:
+				for a in ants:
+					try:
+						return -1 * daldaldict[a.name()][0]
+	return 0.0
 
 
 # finite state machine to RETAIN or INVERT (negation)
