@@ -142,6 +142,8 @@ def parse():
 				print(l[0], s, d)
 
 	plt.scatter(s_scores, d_scores)
+	plt.xlabel("SLIDE positive percent")
+	plt.ylabel("DAL pleasantness index")
 	plt.savefig('fig.png')
 
 
