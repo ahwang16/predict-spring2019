@@ -141,7 +141,7 @@ def normalize_dal(p):
 	meanp, stdevp = 1.85, 0.36
 	for x in range(len(p)):
 		p[x] = (p[x] - meanp) / stdevp
-		p[x] *= abs(p[x] - meanp)
+		p[x] *= (abs(p[x] - meanp) / stdevp)
 
 	return p
 
@@ -186,7 +186,7 @@ def parse():
 				idioms.append(l[0])
 				s_senti.append(sentiment[l[10]])
 
-				print(l[0], s, d, l[10])
+				#print(l[0], s, d, l[10])
 
 	plt.scatter(s_scores, d_scores, c=s_senti)
 	plt.xlabel("SLIDE positive percent")
