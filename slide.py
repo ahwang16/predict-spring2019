@@ -23,20 +23,21 @@ def dal():
 	return None
 
 
-# get pleasant scores from DAL
-def assign_pleasant(sent):
+# get scores from DAL
+# 0 = pleasant, 1 = activation, 2 = imagery
+def assignscore(sent, index):
 	tokens = sent.split()
-	pleasant = []
+	vec = []
 	for t in tokens:
 		try:
-			pleasant.append(daldict[t][0])
+			vec.append(daldict[t][index])
 		except:
-			pleasant.append(try_pleasant(t))
+			vec.append(tryagain(t, index))
 
 	return pleasant
 
 
-def try_pleasant(word):
+def tryagain(word, index):
 	try:
 		syns = wn.synsets(word)
 	except:
@@ -49,7 +50,7 @@ def try_pleasant(word):
 	while x < setlen:
 		while y < synlen:
 			try:
-				return daldict[syns[x].lemmas()[y].name()][0]
+				return daldict[syns[x].lemmas()[y].name()][index]
 			except:
 				y += 1
 		y = 0
@@ -62,7 +63,7 @@ def try_pleasant(word):
 			if ants:
 				for a in ants:
 					try:
-						return (-1 * daldict[a.name()][0])
+						return (-1 * daldict[a.name()][index])
 					except:
 						pass
 	return 0
@@ -148,8 +149,8 @@ def normalize_dal(p):
 
 # update DAL scores with FSM
 # :return: single value for entire phrase (sum of values normalized by phrase length)
-def dal_score(sent):
-	scores = normalize_dal(fsm_negate(sent, assign_pleasant(sent)))
+def dal_score(sent, index):
+	scores = normalize_dal(fsm_negate(sent, assignscore(sent, index)))
 	
 	if scores:
 		return sum(scores) / len(scores)
@@ -162,6 +163,8 @@ def parse():
 		d_scores = []
 		idioms = []
 		s_senti = []
+
+		index = 1 # activation
 
 		sentiment = { "positive" : "r",
 			      "negative" : "b",
@@ -176,7 +179,7 @@ def parse():
 
 			if l[11] != "X":
 				s = float(l[7]) - float(l[9]) - float(l[8])
-				d = dal_score(l[0])
+				d = dal_score(l[0], index)
 
 				if d is None:
 					continue
@@ -190,7 +193,7 @@ def parse():
 
 	plt.scatter(s_scores, d_scores, c=s_senti)
 	plt.xlabel("SLIDE positive percent")
-	plt.ylabel("DAL pleasantness index")
+	plt.ylabel("DAL activation index")
 	plt.savefig('fig1.png')
 
 
