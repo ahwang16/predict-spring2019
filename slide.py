@@ -34,7 +34,7 @@ def assignscore(sent, index):
 		except:
 			vec.append(tryagain(t, index))
 
-	return pleasant
+	return vec
 
 
 def tryagain(word, index):
@@ -164,7 +164,7 @@ def parse():
 		idioms = []
 		s_senti = []
 
-		index = 1 # activation
+		index = 2 # imagery
 
 		sentiment = { "positive" : "r",
 			      "negative" : "b",
@@ -179,8 +179,9 @@ def parse():
 
 			if l[11] != "X":
 				s = float(l[7]) - float(l[9]) - float(l[8])
+				print(l[0])
 				d = dal_score(l[0], index)
-
+				
 				if d is None:
 					continue
 
@@ -193,8 +194,8 @@ def parse():
 
 	plt.scatter(s_scores, d_scores, c=s_senti)
 	plt.xlabel("SLIDE positive percent")
-	plt.ylabel("DAL activation index")
-	plt.savefig('fig1.png')
+	plt.ylabel("DAL imagery index")
+	plt.savefig('fig2.png')
 
 
 if __name__ == "__main__":
