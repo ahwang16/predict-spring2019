@@ -26,4 +26,4 @@ def check_idioms():
 
 if __name__ == "__main__":
 	#just_idioms()
-	check_idioms()
+	#check_idioms()

@@ -92,6 +92,7 @@ def features(filename):
 			claim, label = line.split('\t')
 			if len(claim) == 0:
 				continue
+			print(claim, label)
 			doc = nlp(claim)
 
 			isNumeric = False
@@ -100,7 +101,7 @@ def features(filename):
 				   'CCONJ', 'DET', 'NUM', 'PART', 'PRON', 'SCONJ', 'PUNCT', 'SYM', 'X']
 			for tag in postags:
 				pos[tag] = 0
-				print(tag)
+				#print(tag)
 			verbType = "nil"
 			modal = False
 
@@ -133,7 +134,7 @@ def features(filename):
 	return feats, labels
 
 
-def ewe(filename):
+def eweify(filename):
 	with open(filename, "r") as infile:
 		for line in infile:
 			l = line.strip().split()
@@ -152,14 +153,33 @@ def logreg(X, y):
 
 
 if __name__ == "__main__":
-	feats, y = features(sys.argv[1])
+	eweify('ewe_uni.txt')
 
-	ewe("ewe_uni.txt")
+	feats = []
+	labels = []
 
-	v = DictVectorizer(sparse=False)
-	X = v.fit_transform(feats)
+	with open(sys.argv[1], 'r') as infile:
+		for line in infile:
+			claim, label = line.split('\t')
 
-	scores = [svm(X, y), logreg(X, y)]
+			if len(claim) == 0:
+				continue
+
+			f = {}
+			for l in line.split():
+				try:
+					f[l] = ewe[l]
+				except:
+					pass
+			feats.append(f)
+			labels.append(label)	
+
+#	feats, y = features(sys.argv[1])
+
+#	v = DictVectorizer(sparse=False)
+#	X = v.fit_transform(feats)
+
+	scores = [svm(feats, y), logreg(feats, y)]
 	
 	for score in scores:
 		print("Accuracy: %0.2f (+/- %0.2f)" % (score.mean(), score.std() * 2))
