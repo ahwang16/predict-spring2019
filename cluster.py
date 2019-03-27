@@ -59,11 +59,19 @@ def clusterbyner():
 	for n in ner:
 		cluster[n]
 
+	for idiom in IDIOMS:
+		nlp(idiom)
+		for word in idiom:
+			cluster[word.ner.ent_type_].add(idiom)
+
+
+	return cluster
+
 
 
 
 
 if __name__ == "__main__":
-	words = count()
+	print(clusterbyner())
 
 
