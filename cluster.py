@@ -9,15 +9,14 @@ import json
 
 # stopWords = set(stopwords.words('english'))
 nlp = spacy.load("en_core_web_sm")
-<<<<<<< HEAD
 
 # a class of connected nodes that represents lexical overlap in corpus
 class Graph():
 	def __init__(self):
-		self.nodes = [] # list of all nodes in the graph
+		self.nodes = [Node(None)] # list of all nodes in the graph
 		self.heads = [] # list of indices of head nodes (first word of each idiom) in self.nodes
-		self.indices = {} # word -> index in self.nodes
-		self.index = -1 # current index for use with self.indices/self.nodes
+		self.indices = {"":0} # word -> index in self.nodes
+		self.index = 0 # current index for use with self.indices/self.nodes
 
 
 	# separate function to add the first node to the graph
@@ -28,12 +27,11 @@ class Graph():
 		self.index += 1
 
 
-	def add(self, prev, token, idiom=None, isHead=False):
+	def add(self, token, prev="", idiom=None, isHead=False):
 		# if the token has not been seen yet
 		if token not in self.indices:
-			self.index += 1
 			self.indices[token] = self.index # map token to current index
-
+			self.index += 1
 		self.nodes.append(Node(idiom)) # add new token node to list of nodes
 
 		# map previous node to current node
@@ -46,14 +44,18 @@ class Graph():
 
 	def load(self, idioms):
 		for idiom in idioms:
+			#print('load', idiom)
 			i = nlp(idiom)
+			print('load', i)
 
-			self.add(self.index, i[0].text, isHead=True) # first word is the head node
+			self.add(i[0].text, isHead=True) # first word is the head node
+			prev = i[0].text
 
-			for x in range(1, len(idiom) - 1):
-				self.add(self.index, i[x].text)
+			for x in range(1, len(i) - 1):
+				self.add(prev, i[x].text)
+				prev = i[x].text
 
-			self.add(self.index, i[len(idiom)-1], idiom=idiom)
+			self.add(prev, i[len(i)-1], idiom=idiom)
 
 
 
@@ -74,7 +76,8 @@ class Graph():
 				explored.add(node)
 
 				if len(self.nodes[node].nextnodes) == 0:
-					cluster.add(self.nodes[node].idiom)
+					print(self.nodes[node].idiom)
+					cluster.add('cluster', self.nodes[node].idiom)
 
 				for n in self.nodes[node].nextnodes:
 					if n not in frontier and n not in explored:
@@ -99,9 +102,6 @@ class Node():
 	def addnext(self, prev):
 		self.nextnodes.append(prev)
 
-=======
-IDIOMS = None
->>>>>>> 30223c990e78f8a99aa06869b4d608d7b0e17994
 
 # returns dictionary of lemmatized words and frequencies throughout entire lexicon
 def count():
@@ -177,24 +177,23 @@ def clusterbyner():
 
 
 if __name__ == "__main__":
-<<<<<<< HEAD
+	print("starting parse")
 	IDIOMS = parse()
 	g = Graph()
+	print("starting load")
 	g.load(IDIOMS)
+	print("starting cluster")
 	print(g.cluster())
 
 
 	# print(clusterbyner())
 
-=======
 	#print('starting parse')
 	#IDIOMS = parse()
 
 	#print('starting ner')
 	#clusterbyner()
 
-	print('starting count')
-	count()
->>>>>>> 30223c990e78f8a99aa06869b4d608d7b0e17994
-
+	#print('starting count')
+	#count()
 
