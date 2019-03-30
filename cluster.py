@@ -4,10 +4,12 @@
 
 from collections import defaultdict
 import spacy
+import json
 # from nltk.corpus import stopwords
 
 # stopWords = set(stopwords.words('english'))
 nlp = spacy.load("en_core_web_sm")
+<<<<<<< HEAD
 
 # a class of connected nodes that represents lexical overlap in corpus
 class Graph():
@@ -97,6 +99,9 @@ class Node():
 	def addnext(self, prev):
 		self.nextnodes.append(prev)
 
+=======
+IDIOMS = None
+>>>>>>> 30223c990e78f8a99aa06869b4d608d7b0e17994
 
 # returns dictionary of lemmatized words and frequencies throughout entire lexicon
 def count():
@@ -105,8 +110,13 @@ def count():
 		for line in infile:
 			l = line.split('\t')
 			if l[11] != "X":
-				for word in l[0]:
-					words[words.lemma_] += 1
+				sent = nlp(l[0])
+				print(sent)
+				for word in sent:
+					words[word.lemma_] += 1
+
+	with open('counts.json', 'w') as c:
+		json.dump(words, c)
 
 	return words
 
@@ -121,7 +131,7 @@ def parse(stop=False):
 				sent = nlp(l[0])
 
 				newsent = ""
-
+				print(sent)
 				for token in sent:
 					if stop:
 						if not token.is_stop:
@@ -140,7 +150,7 @@ def clusterbypos():
 
 
 def clusterbyner():
-	cluster = defaultdict(set) # default value is empty set
+	cluster = defaultdict(list) # default value is empty set
 
 	# list of all named entities
 	ner = ["PERSON", "NORP", "FAC", "ORG", "GPE", "LOC", "PRODUCT", "EVENT", "WORK_OF_ART",
@@ -151,10 +161,14 @@ def clusterbyner():
 		cluster[n]
 
 	for idiom in IDIOMS:
-		nlp(idiom)
-		for word in idiom:
-			cluster[word.ner.ent_type_].add(idiom)
+		doc = nlp(idiom)
+		print(doc)
+		for word in doc:
+			cluster[word.ent_type_].append(idiom)
 
+
+	with open('ner.json', 'w') as n:
+		json.dump(cluster, n)
 
 	return cluster
 
@@ -163,6 +177,7 @@ def clusterbyner():
 
 
 if __name__ == "__main__":
+<<<<<<< HEAD
 	IDIOMS = parse()
 	g = Graph()
 	g.load(IDIOMS)
@@ -171,5 +186,15 @@ if __name__ == "__main__":
 
 	# print(clusterbyner())
 
+=======
+	#print('starting parse')
+	#IDIOMS = parse()
+
+	#print('starting ner')
+	#clusterbyner()
+
+	print('starting count')
+	count()
+>>>>>>> 30223c990e78f8a99aa06869b4d608d7b0e17994
 
 
