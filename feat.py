@@ -135,10 +135,7 @@ def features(filename):
 
 
 def eweify(filename):
-	with open(filename, "r") as infile:
-		for line in infile:
-			l = line.strip().split()
-			ewe[l[0]] = [float(n) for n in l[1:]] 
+	pass
 
 
 def svm(X, y, c=1.0):

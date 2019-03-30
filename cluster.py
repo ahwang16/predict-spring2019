@@ -8,7 +8,95 @@ import spacy
 
 # stopWords = set(stopwords.words('english'))
 nlp = spacy.load("en_core_web_sm")
-IDIOMS = parse()
+
+# a class of connected nodes that represents lexical overlap in corpus
+class Graph():
+	def __init__(self):
+		self.nodes = [] # list of all nodes in the graph
+		self.heads = [] # list of indices of head nodes (first word of each idiom) in self.nodes
+		self.indices = {} # word -> index in self.nodes
+		self.index = -1 # current index for use with self.indices/self.nodes
+
+
+	# separate function to add the first node to the graph
+	def addfirst(self, token, idiom):
+		self.indices[token] = self.index
+		self.nodes.append(Node(idiom))
+		self.heads.append(self.index)
+		self.index += 1
+
+
+	def add(self, prev, token, idiom=None, isHead=False):
+		# if the token has not been seen yet
+		if token not in self.indices:
+			self.index += 1
+			self.indices[token] = self.index # map token to current index
+
+		self.nodes.append(Node(idiom)) # add new token node to list of nodes
+
+		# map previous node to current node
+		p = self.indices[prev] # index of previous token
+		self.nodes[p].addnext(self.index)
+
+		if isHead:
+			self.heads.append(self.index)
+
+
+	def load(self, idioms):
+		for idiom in idioms:
+			i = nlp(idiom)
+
+			self.add(self.index, i[0].text, isHead=True) # first word is the head node
+
+			for x in range(1, len(idiom) - 1):
+				self.add(self.index, i[x].text)
+
+			self.add(self.index, i[len(idiom)-1], idiom=idiom)
+
+
+
+
+	# DFS implementation to cluster idioms on lexical overlap
+	def cluster(self):
+		clusters = []
+
+		for head in self.heads:
+			stack = [head] # frontier implemented as stack
+			explored = set()
+			frontier = set(head) # for searching through frontier
+			cluster = set()
+
+			while len(stack):
+				node = stack.pop()
+				frontier.remove(node)
+				explored.add(node)
+
+				if len(self.nodes[node].nextnodes) == 0:
+					cluster.add(self.nodes[node].idiom)
+
+				for n in self.nodes[node].nextnodes:
+					if n not in frontier and n not in explored:
+						stack.append(n)
+						fronter.add(n)
+
+			clusters.append(cluster)
+
+		return clusters
+
+
+
+
+
+
+class Node():
+	def __init__(self, idiom):
+		self.nextnodes = [] # indices of nodes that immediately follow self
+		self.idiom = idiom # source of token this node represents
+
+
+	def addnext(self, prev):
+		self.nextnodes.append(prev)
+
 
 # returns dictionary of lemmatized words and frequencies throughout entire lexicon
 def count():
@@ -23,10 +111,10 @@ def count():
 	return words
 
 
-# store idioms only in memory without stop words
-def parse():
+# store idioms in memory with option to remove stop words
+def parse(stop=False):
 	with open("./IBM_Debater_(R)_SLIDE_LREC_2018/idiomLexicon.tsv", "r") as infile:
-		idioms = set()
+		idioms = []
 		for line in infile:
 			l = line.split('\t')
 			if l[11] != "X":
@@ -35,12 +123,15 @@ def parse():
 				newsent = ""
 
 				for token in sent:
-					if not token.is_stop:
-						newsent += (token.text + token.whitespace_)
+					if stop:
+						if not token.is_stop:
+							newsent += token.text + token.whitespace_
+					else:
+						newsent += token.text + token.whitespace_
 
-				idioms.add(newsent)
+				idioms.append(newsent)
 
-		return idioms
+	return idioms
 
 
 # https://spacy.io/api/annotation#pos-tagging
@@ -72,6 +163,13 @@ def clusterbyner():
 
 
 if __name__ == "__main__":
-	print(clusterbyner())
+	IDIOMS = parse()
+	g = Graph()
+	g.load(IDIOMS)
+	print(g.cluster())
+
+
+	# print(clusterbyner())
+
 
 
