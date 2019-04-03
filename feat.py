@@ -14,8 +14,8 @@ import spacy
 #import parsexml
 from collections import Counter, defaultdict
 import os, sys
+import numpy as np
 
-ewe = {}
 # taken from committed belief paper
 # For the ith word in a sentence, return list of lexical features
 def lexicalfeats(sent, i) :
@@ -134,8 +134,14 @@ def features(filename):
 	return feats, labels
 
 
-def eweify(filename):
-	pass
+def loadewe(filename):
+	ewedict = {}
+	with open(filename, 'r') as ewe:
+		for line in ewe:
+			l = line.split()
+			ewedict[l[0]] = l[1]
+
+	return ewedict
 
 
 def svm(X, y, c=1.0):
@@ -150,43 +156,39 @@ def logreg(X, y):
 
 
 if __name__ == "__main__":
-	eweify('ewe_uni.txt')
+	print('loading ewedict')
+	ewedict = loadewe('ewe_uni.txt')
 
 	feats = []
 	labels = []
-
+	print('loading data')
 	with open(sys.argv[1], 'r') as infile:
 		for line in infile:
+			print(line)
 			claim, label = line.split('\t')
 
 			if len(claim) == 0:
 				continue
 
-			
-			feats.append(f)
-			labels.append(label)	
-
+			f = []
+			for l in line.split():
+				try:
+					f.append(ewedict[l])
+				except:
+					pass
+			feats.append(np.mean(np.array(f).astype(np.float)))
+			labels.append(label)
+	y = labels
+#	y = np.array(labels).reshape(-1, 1)
 #	feats, y = features(sys.argv[1])
 
 #	v = DictVectorizer(sparse=False)
 #	X = v.fit_transform(feats)
-
+	print('running models')
 	scores = [svm(feats, y), logreg(feats, y)]
 	
 	for score in scores:
 		print("Accuracy: %0.2f (+/- %0.2f)" % (score.mean(), score.std() * 2))
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
