@@ -162,12 +162,7 @@ if __name__ == "__main__":
 			if len(claim) == 0:
 				continue
 
-			f = {}
-			for l in line.split():
-				try:
-					f[l] = ewe[l]
-				except:
-					pass
+			
 			feats.append(f)
 			labels.append(label)	
 
