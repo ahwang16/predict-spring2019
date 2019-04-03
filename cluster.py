@@ -21,50 +21,39 @@ class Graph():
 
 	def add(self, token, prev="", idiom=None, isHead=False):
 		p = self.indices[prev]
-		print('token: {}, prev: {}'.format(token, prev))
-		# if the token has not been seen yet
+		
 		if token not in self.indices:
-			self.indices[token] = self.index # map token to current index
+			self.indices[token] = self.index # create new mapping with current index
 			self.nodes.append(Node(idiom, token)) # add new token node to list of nodes
-			self.nodes[p].addnext(self.index)
+			self.nodes[p].addnext(self.index) # prev token node points at current
 			self.index += 1
-		else:
-			current = self.indices[token]
-			self.nodes[current].addnext(p)
 
-		# map previous node to current node
-		p = self.indices[prev] # index of previous token
-		self.nodes[p].addnext(self.index)
-
-		if isHead:
-			self.heads.append(self.index)
+			if isHead:
+				print(str(self.index-1))
+				self.heads.append(self.index-1)
 
 
 	def load(self, idioms):
 		for idiom in idioms:
-			#print('load', idiom)
 			i = nlp(idiom)
-			print('load', i)
-			print(self.indices)
-			self.add(i[0].text, isHead=True) # first word is the head node
+			self.add(i[0].text, idiom=idiom, isHead=True) # first word is the head node
 			prev = i[0].text
 
 			if len(i) == 1:
-				self.nodes[self.index-1].idiom = idiom
+				#self.nodes[self.index-1].idiom = idiom
+				continue
 
 			for x in range(1, len(i) - 1):
-				self.add(i[x].text, prev)
+				self.add(i[x].text, prev, idiom=idiom)
 				prev = i[x].text
 
 			self.add(i[len(i)-1], prev, idiom=idiom)
 
 
-
-
 	# DFS implementation to cluster idioms on lexical overlap
 	def cluster(self):
 		clusters = []
-
+		print(self.heads)
 		for head in self.heads:
 			stack = [head] # frontier implemented as stack
 			explored = set()
@@ -77,30 +66,18 @@ class Graph():
 				node = stack.pop()
 				frontier.remove(node)
 				explored.add(node)
-				print('node: {}'.format(node))
-				#print(stack)
-				#for n in self.nodes:
-					#print(n)
+				
 				if len(self.nodes[node].nextnodes) == 0:
-					print(self.nodes[node].idiom)
-				cluster.add(self.nodes[node].idiom)
-				print(self.nodes[node].nextnodes)
-
+					cluster.add(self.nodes[node].idiom)
 
 				for n in self.nodes[node].nextnodes:
-					print("please", n)
 					if n not in frontier and n not in explored:
-						print('hello')
 						stack.append(n)
 						frontier.add(n)
 
 			clusters.append(cluster)
 
 		return clusters
-
-
-
-
 
 
 class Node():
@@ -142,7 +119,7 @@ def parse(stop=False):
 		idioms = []
 		count = 0
 		for line in infile:
-			if count == 10: break;
+			if count == 100: break;
 			count += 1
 			l = line.split('\t')
 			if l[11] != "X":
