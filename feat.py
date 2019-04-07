@@ -8,7 +8,7 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.svm import SVC
 from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import LogisticRegression
-#import sklearn
+from sklearn.metrics import accuracy_score
 #import pycrfsuite
 import spacy
 #import parsexml
@@ -139,7 +139,7 @@ def loadewe(filename):
 	with open(filename, 'r') as ewe:
 		for line in ewe:
 			l = line.split()
-			ewedict[l[0]] = l[1]
+			ewedict[l[0]] = np.array(list(map(float, l[1:])))
 
 	return ewedict
 
@@ -152,7 +152,10 @@ def svm(X, y, c=1.0):
 	
 def logreg(X, y):
 	clf = LogisticRegression()
-	return cross_val_score(clf, X, y, cv=5)
+#	return cross_val_score(clf, X, y, cv=5)
+	clf.fit(X[:3037], y[:3037])
+	prediction = clf.predict(X[3037:])
+	return np.array(accuracy_score(y[3037:], prediction))
 
 
 if __name__ == "__main__":
@@ -171,14 +174,16 @@ if __name__ == "__main__":
 				continue
 
 			f = []
-			for l in line.split():
+			for l in claim.split():
 				try:
 					f.append(ewedict[l])
 				except:
-					pass
-			feats.append(np.mean(np.array(f).astype(np.float)))
-			labels.append(label)
+					f.append(np.zeros(300))
+			feats.append(np.mean(f, axis=0))
+			labels.append(int(label))
 	y = labels
+	print(y)
+	print(np.array(feats).shape)
 #	y = np.array(labels).reshape(-1, 1)
 #	feats, y = features(sys.argv[1])
 
