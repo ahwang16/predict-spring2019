@@ -13,41 +13,50 @@ nlp = spacy.load("en_core_web_sm")
 # a class of connected nodes that represents lexical overlap in corpus
 class Graph():
 	def __init__(self):
-		self.nodes = [Node(None, None)] # list of all nodes in the graph
-		self.heads = [] # list of indices of head nodes (first word of each idiom) in self.nodes
+		self.nodes = [Node(None, None, None)] # list of all nodes in the graph
+		self.heads = set() # set of indices of head nodes (first word of each idiom) in self.nodes
 		self.indices = {"":0} # word -> index in self.nodes
 		self.index = 1 # current index for use with self.indices/self.nodes
 
 
-	def add(self, token, prev="", idiom=None, isHead=False):
+	def add(self, token, terminal, prev="", idiom=None, isHead=False):
 		p = self.indices[prev]
 		
 		if token not in self.indices:
 			self.indices[token] = self.index # create new mapping with current index
-			self.nodes.append(Node(idiom, token)) # add new token node to list of nodes
+			self.nodes.append(Node(idiom, token, terminal)) # add new token node to list of nodes
 			self.nodes[p].addnext(self.index) # prev token node points at current
 			self.index += 1
 
 			if isHead:
-				print(str(self.index-1))
-				self.heads.append(self.index-1)
+				self.heads.add(self.index-1)
+
+		else:
+			current = self.indices[token]
+			self.nodes[p].addnext(current)
+
+			if isHead:
+				self.heads.add(current)
+
+			if terminal:
+				self.nodes[current].addidiom(idiom)
 
 
 	def load(self, idioms):
 		for idiom in idioms:
 			i = nlp(idiom)
-			self.add(i[0].text, idiom=idiom, isHead=True) # first word is the head node
+			self.add(i[0].text, False, idiom={idiom}, isHead=True) # first word is the head node
 			prev = i[0].text
 
 			if len(i) == 1:
-				#self.nodes[self.index-1].idiom = idiom
+				self.nodes[self.index-1].terminal = True
 				continue
 
 			for x in range(1, len(i) - 1):
-				self.add(i[x].text, prev, idiom=idiom)
+				self.add(i[x].text, False, prev, idiom={idiom})
 				prev = i[x].text
 
-			self.add(i[len(i)-1], prev, idiom=idiom)
+			self.add(i[-1], True, prev, idiom={idiom})
 
 
 	# DFS implementation to cluster idioms on lexical overlap
@@ -67,8 +76,8 @@ class Graph():
 				frontier.remove(node)
 				explored.add(node)
 				
-				if len(self.nodes[node].nextnodes) == 0:
-					cluster.add(self.nodes[node].idiom)
+				if self.nodes[node].terminal:
+					cluster = cluster | self.nodes[node].idiom
 
 				for n in self.nodes[node].nextnodes:
 					if n not in frontier and n not in explored:
@@ -81,17 +90,23 @@ class Graph():
 
 
 class Node():
-	def __init__(self, idiom, token):
+	def __init__(self, idiom, token, terminal):
 		self.nextnodes = [] # indices of nodes that immediately follow self
 		self.idiom = idiom # source of token this node represents
 		self.token = token
+		self.terminal = terminal
 
 
 	def __str__(self):
 		return "{} ({})".format(self.token, self.idiom)
 
+
 	def addnext(self, prev):
 		self.nextnodes.append(prev)
+
+
+	def addidiom(self, idiom):
+		self.idiom.add(idiom)
 
 
 # returns dictionary of lemmatized words and frequencies throughout entire lexicon
@@ -180,7 +195,7 @@ if __name__ == "__main__":
 	print("starting cluster")
 	print(g.cluster())
 
-
+	print(g.indices)
 	# print(clusterbyner())
 
 	#print('starting parse')
