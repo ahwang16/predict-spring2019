@@ -9,24 +9,31 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from nltk.corpus import wordnet as wn
+import json
+import spacy
 
 
-daldict = {}
+nlp = spacy.load('en_core_web_sm')
 
 
 # load DAL
 def dal():
+	daldict = {}
 	with open("dict_of_affect.txt", "r") as dal:
 		for line in dal :
 				linesplit = line.split()
 				daldict[linesplit[0]] = [float(linesplit[1]), float(linesplit[2]), float(linesplit[3])]
-	return None
+
+	with open('dal.json', 'w') as dal:
+		json.dump(daldict, dal)
+
+	return daldict
 
 
 # get scores from DAL
 # 0 = pleasant, 1 = activation, 2 = imagery
 def assignscore(sent, index):
-	tokens = sent.split()
+	tokens = nlp(sent)
 	vec = []
 	for t in tokens:
 		try:
@@ -80,13 +87,13 @@ def fsm_negate(sent, scores):
 	# expand example of negation words https://www.grammarly.com/blog/negatives/
 	# on the word wont: one's customary behavior in a particular situation.
 	# "Constance, as was her wont, had paid her little attention" --> infrequent
-	negate = ["not", "no", "never", "cannot", "didn't", "can't", "cant", "didnt", "couldnt",
+	negate = {"not", "no", "never", "cannot", "didn't", "can't", "cant", "didnt", "couldnt",
 				"shouldnt", "couldn't", "shouldn't", "nobody", "nothing", "nowhere", "neither",
 				"nor", "none", "doesn't", "doesnt", "isn't", "isnt", "wasn't", "wasnt",
-				"wouldn't", "wouldnt", "won't", "wont"]
+				"wouldn't", "wouldnt", "won't", "wont"}
 
 	# comparative degree adjectives http://www.sparklebox.co.uk/literacy/vocabulary/word-lists/comparatives-superlatives/#.W8E_2xNKjyw
-	comp_adj = ["worse", "better", "angrier", "bigger", "blacker", "blander", "bluer", "bolder", "bossier",
+	comp_adj = {"worse", "better", "angrier", "bigger", "blacker", "blander", "bluer", "bolder", "bossier",
 				"braver", "briefer", "brighter", "broader", "busier", "calmer", "cheaper", "chewier", "chubbier",
 				"classier", "cleaner", "cleverer", "closer", "cloudier", "clumsier", "coarser", "colder",
 				"cooler", "crazier", "creamier", "creepier", "crispier", "crunchier", "curly", "curvier",
@@ -106,7 +113,7 @@ def fsm_negate(sent, scores):
 				"smoother", "softer", "sooner", "sorer", "sorrier", "sourer", "spicier", "steeper", "stingier",
 				"stranger", "stricter", "stronger", "sunnier", "sweatier", "sweeter", "taller", "tanner", "tastier",
 				"thicker", "thinner", "thirstier", "tinier", "tougher", "truer", "uglier", "warmer", "weaker",
-				"wealthier", "weirder", "wetter", "wider", "wilder", "windier", "wiser", "worldlier", "worthier", "younger"]
+				"wealthier", "weirder", "wetter", "wider", "wilder", "windier", "wiser", "worldlier", "worthier", "younger"}
 
 	# state is True for RETAIN and False for INVERT
 	# start with RETAIN
@@ -157,29 +164,44 @@ def dal_score(sent, index):
 	return None
 
 
-def parse():
+def parsepositive():
+	with open("./IBM_Debater_(R)_SLIDE_LREC_2018/idiomLexicon.tsv", "r") as infile:
+		idioms = {}
+
+		for line in infile:
+			l = line.split('\t')
+
+			if l[11] != 'X':
+				score = float(l[7]) - float(l[9]) - float(l[8])
+
+				idioms[l[0]] = score
+
+	with open('idiomLexicon.json', 'w') as outfile:
+		json.dump(idioms)
+
+	return idioms
+
+
+# index: 0 = pleasant, 1 = imagery, 2 = activation
+def displayallraw(index, outfile):
 	with open("./IBM_Debater_(R)_SLIDE_LREC_2018/idiomLexicon.tsv", "r") as infile:
 		s_scores = []
 		d_scores = []
 		idioms = []
 		s_senti = []
 
-		index = 2 # imagery
-
 		sentiment = { "positive" : "r",
 			      "negative" : "b",
 			      "neutral" : "g",
 			      "inappropriate" : "y" }
-		next(infile)
 
-		
+		label = { 0: "pleasantness", 1: "imagery", 2: "activation" }
 
 		for line in infile:
 			l = line.split("\t")
 
 			if l[11] != "X":
 				s = float(l[7]) - float(l[9]) - float(l[8])
-				print(l[0])
 				d = dal_score(l[0], index)
 				
 				if d is None:
@@ -194,13 +216,21 @@ def parse():
 
 	plt.scatter(s_scores, d_scores, c=s_senti)
 	plt.xlabel("SLIDE positive percent")
-	plt.ylabel("DAL imagery index")
-	plt.savefig('fig2.png')
+	plt.ylabel("DAL {} index".format(label[index]))
+	plt.savefig(outfile)
+
+
+def displaysubset(index, IDIOMS, outfile):
+	with open(IDIOMS, 'r') as infile:
+		idioms = json.load(infile)
+
 
 
 if __name__ == "__main__":
-	dal()
-	parse()
+	# dal()
+	# parse()
+
+	print(parsepositive())
 
 
 

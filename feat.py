@@ -20,41 +20,10 @@ import numpy as np
 # For the ith word in a sentence, return list of lexical features
 def lexicalfeats(sent, i) :
 	token = sent[i]
-	#	print(sent, i)
-	#	print("token:", token, ", token type:", type(token), ", sent type:", type(sent))
-	# daughters = {c.text.lower() for c in token.children}
-	# ancestors = {h.lemma_.lower() for h in token.ancestors}
-	# lemmas = {"tell", "accuse", "insist", "seem", "believe", "say", "find", "conclude", "claim", "trust", "think", "suspect", "doubt", "suppose"}
-	# auxdaughter = "nil"
-	# moddaughter = "nil"
-	# for c in token.children:
-	# 	if c.pos_ == "AUX":
-	# 		auxdaughter = c.text
-	# 	if c.tag_ == "MD":
-	# 		moddaughter = c.text
-
-	# feats = {
-	# 	"isNumeric" : not token.is_alpha,
-	# 	"POS" : token.pos_,
-	# 	"verbType" : token.tag_ if token.pos_ == "VERB" else "nil",
-	# 	"whichModalAmI" : token if token.tag_ == "MD" else "nil",
-	# 	"amVBwithDaughterTo" : token.pos_ == "VERB" and "to" in daughters,
-	# 	"haveDaughterPerfect" : ("has" in daughters or "have" in daughters or "had" in daughters),
-	# 	"haveDaughterShould" : "should" in daughters,
-	# 	"haveDaughterWh" : ("where" in daughters or "when" in daughters or "while" in daughters or "who" in daughters or "why" in daughters),
-	# 	"haveReportingAncestor" : (token.pos_ == "VERB" and len(lemmas.intersection(ancestors))),
-	# 	"parentPOS" : token.head.pos_,
-	# 	"whichAuxIsMyDaughter" : auxdaughter,
-	# 	"whichModalIsMyDaughter" : moddaughter
-	# }
-
-
 	isNumeric = token.is_digit
 	pos = token.pos_
 	verbType = token.tag_ if token.pos_ == "VERB" else "nil"
 	modal = token.tag_ == "MD"
-
-
 
 	return isNumeric, pos, verbType, modal
 
@@ -72,12 +41,7 @@ def basicfeats(sent):
 			cap += 1
 	cap /= length
 	entity /= length
-	# return {
-	# 	"sentLength" : length,
-	# 	"capital" : cap,
-	# 	"entity" : entity
-	# }
-
+	
 	return length, cap, entity
 
 
@@ -158,32 +122,40 @@ def logreg(X, y):
 	return np.array(accuracy_score(y[3037:], prediction))
 
 
+def embedfeatures(embeddings, infile):
+	feats = []
+	labels = []
+	nlp = spacy.load("en")
+
+	with open(infile, 'r') as data:
+		for line in data:
+			print(line)
+
+			claim, label = line.split('\t')
+
+			continue if len(claim) == 0
+
+			doc = nlp(claim)
+
+			f = []
+			for token in doc:
+				try:
+					f.append(ewedict[token.text])
+				except:
+					f.append(np.zeros(300))
+
+			feats.append(np.mean(f, axis=0))
+			labels.append(int(label))
+
+	return feats, labels
+
+
 if __name__ == "__main__":
 	print('loading ewedict')
 	ewedict = loadewe('ewe_uni.txt')
 
-	feats = []
-	labels = []
-	print('loading data')
-	with open(sys.argv[1], 'r') as infile:
-		for line in infile:
-			print(line)
-			claim, label = line.split('\t')
-
-			if len(claim) == 0:
-				continue
-
-			f = []
-			for l in claim.split():
-				try:
-					f.append(ewedict[l])
-				except:
-					f.append(np.zeros(300))
-			feats.append(np.mean(f, axis=0))
-			labels.append(int(label))
-	y = labels
-	print(y)
-	print(np.array(feats).shape)
+	feats, labels = embedfeatures(ewedict, sys.argv[1])
+	
 #	y = np.array(labels).reshape(-1, 1)
 #	feats, y = features(sys.argv[1])
 
