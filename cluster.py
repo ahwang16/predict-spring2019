@@ -4,7 +4,7 @@
 
 from collections import defaultdict
 import spacy
-import json
+import pickle as pkl
 # from nltk.corpus import stopwords
 
 # stopWords = set(stopwords.words('english'))
@@ -134,7 +134,7 @@ def parse(stop=False):
 		idioms = []
 		count = 0
 		for line in infile:
-			if count == 100: break;
+			if count == 25: break;
 			count += 1
 			l = line.split('\t')
 			if l[11] != "X":
@@ -159,6 +159,7 @@ def clusterbypos(IDIOMS):
 	pass
 
 
+# https://spacy.io/api/annotation#named-entities
 def clusterbyner(IDIOMS):
 	cluster = defaultdict(set) # default value is empty set
 
@@ -168,7 +169,7 @@ def clusterbyner(IDIOMS):
 	
 	# initialize defaultdict so that all named entities are accounted for even if not seen
 	for n in ner:
-		cluster[n] = {}
+		cluster[n] = set()
 
 	for idiom in IDIOMS:
 		doc = nlp(idiom)
@@ -177,8 +178,8 @@ def clusterbyner(IDIOMS):
 			cluster[word.ent_type_].add(idiom)
 
 
-	with open('ner.json', 'w') as n:
-		json.dump(cluster, n)
+	with open('ner.pkl', 'wb') as n:
+		pkl.dump(cluster, n)
 
 	return cluster
 
@@ -197,7 +198,7 @@ if __name__ == "__main__":
 
 	# print(g.indices)
 	
-	print(clusterbyner())
+	print(clusterbyner(IDIOMS))
 
 	#print('starting parse')
 	#IDIOMS = parse()
