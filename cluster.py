@@ -3,7 +3,7 @@
 # a file of helper files ot parse and cluster idioms in the SLIDE lexicon
 
 from collections import defaultdict
-import spacy
+import spacy, json
 import pickle as pkl
 # from nltk.corpus import stopwords
 
@@ -42,7 +42,10 @@ class Graph():
 				self.nodes[current].addidiom(idiom)
 
 
-	def load(self, idioms):
+	def load(self, IDIOMS):
+		with open(IDIOMS, 'r') as data:
+			idioms = json.load(IDIOMS)
+
 		for idiom in idioms:
 			i = nlp(idiom)
 			self.add(i[0].text, False, idiom={idiom}, isHead=True) # first word is the head node
@@ -110,19 +113,23 @@ class Node():
 
 
 # returns dictionary of lemmatized words and frequencies throughout entire lexicon
-def count():
+def count(IDIOMS):
 	words = defaultdict(int)
-	with open("./IBM_Debater_(R)_SLIDE_LREC_2018/idiomLexicon.tsv", "r") as infile:
-		for line in infile:
-			l = line.split('\t')
-			if l[11] != "X":
-				sent = nlp(l[0])
-				print(sent)
-				for word in sent:
-					words[word.lemma_] += 1
 
-	with open('counts.json', 'w') as c:
-		json.dump(words, c)
+	with open(IDIOMS, 'r') as idioms:
+		data = json.load(idioms)
+
+	for idiom in data:
+		doc = nlp(idiom)
+
+		for word in doc:
+			words[word.lemma_] += 1
+
+	with open('counts.pkl', 'wb') as n:
+		pkl.dump(words, n)
+
+	with open('counts.json', 'w') as n:
+		json.dump(words, n)
 
 	return words
 
@@ -132,10 +139,10 @@ def parse(stop=False):
 	with open("./IBM_Debater_(R)_SLIDE_LREC_2018/idiomLexicon.tsv", "r") as infile:
 		next(infile)
 		idioms = []
-		count = 0
+		#count = 0
 		for line in infile:
-			if count == 25: break;
-			count += 1
+			#if count == 25: break;
+			#count += 1
 			l = line.split('\t')
 			if l[11] != "X":
 				sent = nlp(l[0])
@@ -151,11 +158,17 @@ def parse(stop=False):
 
 				idioms.append(newsent)
 
+	with open('idioms.json', 'w') as n:
+		json.dump(idioms, n)
+
 	return idioms
 
 
 # https://spacy.io/api/annotation#pos-tagging
 def clusterbypos(IDIOMS):
+	with open(IDIOMS, 'r') as idioms:
+		data = json.load(idioms)
+
 	cluster = defaultdict(set)
 
 	pos = ['ADJ', 'ADP', 'ADV', 'AUX', 'CONJ', 'CCONJ', 'DET', 'INTJ', 'NOUN',
@@ -163,9 +176,9 @@ def clusterbypos(IDIOMS):
 		   'SPACE']
 
 	for p in pos:
-		cluster[n] = set()
+		cluster[p] = set()
 
-	for idiom in IDIOMS:
+	for idiom in data:
 		doc = nlp(idiom)
 		for word in doc:
 			cluster[word.pos_].add(idiom)
@@ -178,6 +191,9 @@ def clusterbypos(IDIOMS):
 
 # https://spacy.io/api/annotation#named-entities
 def clusterbyner(IDIOMS):
+	with open(IDIOMS, 'r') as idioms:
+		data = json.load(idioms)
+
 	cluster = defaultdict(set) # default value is empty set
 
 	# list of all named entities
@@ -188,9 +204,8 @@ def clusterbyner(IDIOMS):
 	for n in ner:
 		cluster[n] = set()
 
-	for idiom in IDIOMS:
+	for idiom in data:
 		doc = nlp(idiom)
-		print(doc)
 		for word in doc:
 			cluster[word.ent_type_].add(idiom)
 
@@ -206,23 +221,26 @@ def clusterbyner(IDIOMS):
 
 if __name__ == "__main__":
 	print("starting parse")
-	IDIOMS = parse()
+	parse()
 	# g = Graph()
 	# print("starting load")
-	# g.load(IDIOMS)
+	# g.load('idioms_sample.json')
 	# print("starting cluster")
 	# print(g.cluster())
 
 	# print(g.indices)
 
-	# print(clusterbyner())
+	IDIOMS = 'idioms.json'
+
+	print('starting ner')
+	print(clusterbyner(IDIOMS))
 
 	#print('starting parse')
 	#IDIOMS = parse()
 
-	print('starting ner')
-	clusterbyner()
+	print('starting pos')
+	print(clusterbypos(IDIOMS))
 
-	#print('starting count')
-	#count()
+	print('starting count')
+	print(count(IDIOMS))
 
