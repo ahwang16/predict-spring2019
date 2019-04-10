@@ -155,12 +155,12 @@ def parse(stop=False):
 
 
 # https://spacy.io/api/annotation#pos-tagging
-def clusterbypos():
+def clusterbypos(IDIOMS):
 	pass
 
 
-def clusterbyner():
-	cluster = defaultdict(list) # default value is empty set
+def clusterbyner(IDIOMS):
+	cluster = defaultdict(set) # default value is empty set
 
 	# list of all named entities
 	ner = ["PERSON", "NORP", "FAC", "ORG", "GPE", "LOC", "PRODUCT", "EVENT", "WORK_OF_ART",
@@ -168,13 +168,13 @@ def clusterbyner():
 	
 	# initialize defaultdict so that all named entities are accounted for even if not seen
 	for n in ner:
-		cluster[n]
+		cluster[n] = {}
 
 	for idiom in IDIOMS:
 		doc = nlp(idiom)
 		print(doc)
 		for word in doc:
-			cluster[word.ent_type_].append(idiom)
+			cluster[word.ent_type_].add(idiom)
 
 
 	with open('ner.json', 'w') as n:
@@ -189,14 +189,15 @@ def clusterbyner():
 if __name__ == "__main__":
 	print("starting parse")
 	IDIOMS = parse()
-	g = Graph()
-	print("starting load")
-	g.load(IDIOMS)
-	print("starting cluster")
-	print(g.cluster())
+	# g = Graph()
+	# print("starting load")
+	# g.load(IDIOMS)
+	# print("starting cluster")
+	# print(g.cluster())
 
-	print(g.indices)
-	# print(clusterbyner())
+	# print(g.indices)
+	
+	print(clusterbyner())
 
 	#print('starting parse')
 	#IDIOMS = parse()
