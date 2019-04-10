@@ -156,7 +156,24 @@ def parse(stop=False):
 
 # https://spacy.io/api/annotation#pos-tagging
 def clusterbypos(IDIOMS):
-	pass
+	cluster = defaultdict(set)
+
+	pos = ['ADJ', 'ADP', 'ADV', 'AUX', 'CONJ', 'CCONJ', 'DET', 'INTJ', 'NOUN',
+		   'NUM', 'PART', 'PRON', 'PROPN', 'PUNCT', 'SCONJ', 'SYM', 'VERB', 'X',
+		   'SPACE']
+
+	for p in pos:
+		cluster[n] = set()
+
+	for idiom in IDIOMS:
+		doc = nlp(idiom)
+		for word in doc:
+			cluster[word.pos_].add(idiom)
+
+	with open('pos.pkl', 'wb') as n:
+		pkl.dump(cluster, n)
+
+	return cluster
 
 
 # https://spacy.io/api/annotation#named-entities
@@ -197,14 +214,14 @@ if __name__ == "__main__":
 	# print(g.cluster())
 
 	# print(g.indices)
-	
-	print(clusterbyner(IDIOMS))
+
+	# print(clusterbyner())
 
 	#print('starting parse')
 	#IDIOMS = parse()
 
-	#print('starting ner')
-	#clusterbyner()
+	print('starting ner')
+	clusterbyner()
 
 	#print('starting count')
 	#count()
