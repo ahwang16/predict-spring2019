@@ -8,7 +8,7 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.svm import SVC
 from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, recall_score, f1_score
 #import pycrfsuite
 import spacy
 #import parsexml
@@ -56,7 +56,7 @@ def features(filename):
 			claim, label = line.split('\t')
 			if len(claim) == 0:
 				continue
-			print(claim, label)
+			#print(claim, label)
 			doc = nlp(claim)
 
 			isNumeric = False
@@ -109,17 +109,28 @@ def loadewe(filename):
 
 
 def svm(X, y, c=1.0):
-
 	clf = SVC(C=c, gamma='auto')
-	return cross_val_score(clf, X, y, cv=5)
-
+	#return cross_val_score(clf, X, y, cv=5)
+	clf.fit(X[:-500], y[:-500])
+	prediction = clf.predict(X[-500:])
+	print(prediction)
+	acc = accuracy_score(y[-500:], prediction)
+	print(acc)
+	rec = recall_score(y[-500:], prediction)
+	print(rec)
+	return np.array(accuracy_score(y[-500:], prediction),
+			recall_score(y[-500:], prediction),
+			f1_score(y[-500], prediction))
 	
 def logreg(X, y):
 	clf = LogisticRegression()
-#	return cross_val_score(clf, X, y, cv=5)
-	clf.fit(X[:3037], y[:3037])
-	prediction = clf.predict(X[3037:])
-	return np.array(accuracy_score(y[3037:], prediction))
+	#return cross_val_score(clf, X, y, cv=5)
+	clf.fit(X[:-500], y[:-500])
+	prediction = clf.predict(X[-500:])
+	print(prediction)
+	return np.array(accuracy_score(y[-500:], prediction),
+			recall_score(y[-500:], prediction),
+			f1_score(y[-500], prediction))
 
 
 def embedfeatures(embeddings, infile):
@@ -129,11 +140,12 @@ def embedfeatures(embeddings, infile):
 
 	with open(infile, 'r') as data:
 		for line in data:
-			print(line)
+			#print(line)
 
 			claim, label = line.split('\t')
 
-			continue if len(claim) == 0
+			if len(claim) == 0:
+				continue
 
 			doc = nlp(claim)
 
@@ -145,6 +157,7 @@ def embedfeatures(embeddings, infile):
 					f.append(np.zeros(300))
 
 			feats.append(np.mean(f, axis=0))
+			#feats.append(max(f))
 			labels.append(int(label))
 
 	return feats, labels
@@ -154,7 +167,7 @@ if __name__ == "__main__":
 	print('loading ewedict')
 	ewedict = loadewe('ewe_uni.txt')
 
-	feats, labels = embedfeatures(ewedict, sys.argv[1])
+	feats, y = embedfeatures(ewedict, sys.argv[1])
 	
 #	y = np.array(labels).reshape(-1, 1)
 #	feats, y = features(sys.argv[1])
@@ -164,8 +177,9 @@ if __name__ == "__main__":
 	print('running models')
 	scores = [svm(feats, y), logreg(feats, y)]
 	
-	for score in scores:
-		print("Accuracy: %0.2f (+/- %0.2f)" % (score.mean(), score.std() * 2))
+	print(scores)
+	#for score in scores:
+		#print("Accuracy: %0.2f (+/- %0.2f)" % (score.mean(), score.std() * 2))
 
 
 

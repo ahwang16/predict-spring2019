@@ -15,10 +15,11 @@ import spacy
 
 nlp = spacy.load('en_core_web_sm')
 
+with open('dal.json', 'r') as infile:
+	daldict = json.load(infile)
 
 # load DAL
 def dal():
-	daldict = {}
 	with open("dict_of_affect.txt", "r") as dal:
 		for line in dal :
 				linesplit = line.split()
@@ -37,43 +38,66 @@ def assignscore(sent, index):
 	vec = []
 	for t in tokens:
 		try:
-			vec.append(daldict[t][index])
+			vec.append(daldict[t.text][index])
 		except:
-			vec.append(tryagain(t, index))
+			vec.append(tryagain(t.text, index))
 
 	return vec
 
 
 def tryagain(word, index):
-	try:
-		syns = wn.synsets(word)
-	except:
+	syns = wn.synsets(word)
+
+	if len(syns) == 0:
 		return 0
 
-	setlen = len(syns)
-	synlen = len(syns[0])
-	x, y = 0
-
-	while x < setlen:
-		while y < synlen:
+	for syn in syns:
+		for lemma in syn.lemmas():
 			try:
-				return daldict[syns[x].lemmas()[y].name()][index]
+				return daldict[lemma.name()][index]
 			except:
-				y += 1
-		y = 0
-		x += 1
-		synlen = len(syns[x])
+				pass
 
 	for syn in syns:
-		for l in syn.lemmas():
-			ants = l.antonyms()
+		for lemma in syn.lemmas():
+			ants = lemma.antonyms()
 			if ants:
-				for a in ants:
+				for ant in ants:
 					try:
-						return (-1 * daldict[a.name()][index])
+						return (-1 * daldict[ant.name()][index])
 					except:
 						pass
+
 	return 0
+
+
+
+
+
+#	setlen = len(syns)
+#	synlen = len(syns[0])
+#	x, y = 0
+
+#	while x < setlen:
+#		while y < synlen:
+#			try:
+#				return daldict[syns[x].lemmas()[y].name()][index]
+#			except:
+#				y += 1
+#		y = 0
+#		x += 1
+#		synlen = len(syns[x])
+
+#	for syn in syns:
+#		for l in syn.lemmas():
+#			ants = l.antonyms()
+#			if ants:
+#				for a in ants:
+#					try:
+#						return (-1 * daldict[a.name()][index])
+#					except:
+#						pass
+#	return 0
 
 
 # finite state machine to RETAIN or INVERT (negation)
@@ -142,11 +166,15 @@ def fsm_negate(sent, scores):
 # https://www.god-helmet.com/wp/whissel-dictionary-of-affect/index.htm
 # pleasantness: mean 1.85, stdev 0.36
 # :return: array of Z-normalized scores
-def normalize_dal(p):
+def normalize_dal(p, index):
 	if sum(p) == 0:
 		return None
 
-	meanp, stdevp = 1.85, 0.36
+	# p a i
+	mean = {0: 1.85, 1: 1.67, 2: 1.52}
+	stdev = {0: 0.36, 1: 0.36, 2: 0.63}
+
+	meanp, stdevp = mean[index], stdev[index]
 	for x in range(len(p)):
 		p[x] = (p[x] - meanp) / stdevp
 		p[x] *= (abs(p[x] - meanp) / stdevp)
@@ -157,32 +185,56 @@ def normalize_dal(p):
 # update DAL scores with FSM
 # :return: single value for entire phrase (sum of values normalized by phrase length)
 def dal_score(sent, index):
-	scores = normalize_dal(fsm_negate(sent, assignscore(sent, index)))
+	scores = normalize_dal(fsm_negate(sent, assignscore(sent, index)), index)
 	
 	if scores:
 		return sum(scores) / len(scores)
 	return None
 
 
+# json-dump dictionary --> str(idiom) : (float(positive_percent), str(sentiment))
 def parsepositive():
 	with open("./IBM_Debater_(R)_SLIDE_LREC_2018/idiomLexicon.tsv", "r") as infile:
 		idioms = {}
 
+		next(infile)
+
 		for line in infile:
 			l = line.split('\t')
-
+			print(l[0])
 			if l[11] != 'X':
 				score = float(l[7]) - float(l[9]) - float(l[8])
 
-				idioms[l[0]] = score
+				idioms[l[0]] = (score, l[10])
 
 	with open('idiomLexicon.json', 'w') as outfile:
-		json.dump(idioms)
+		json.dump(idioms, outfile)
 
 	return idioms
 
 
-# index: 0 = pleasant, 1 = imagery, 2 = activation
+# assign and save DAL scores
+# json-dump dictionary --> str(idiom) : ((p, a, i scores), float(positive_percent), str(sentiment))
+def savescore():
+	with open('idiomLexicon.json', 'r') as infile:
+		idioms = json.load(infile)
+
+	idiomsnew = {}
+	count = 0
+	for idiom in idioms:
+#		if count == 10:
+#			break
+		print(str(count))
+		print(idiom)
+		score = (dal_score(idiom, 0), dal_score(idiom, 1), dal_score(idiom, 2))
+
+		idiomsnew[idiom] = (score, idioms[idiom][0], idioms[idiom][1])
+		count += 1
+	with open('idiomLexiconScored.json', 'w') as outfile:
+		json.dump(idiomsnew, outfile)
+
+
+# index: 0 = pleasant, 1 = activation, 2 = imagery
 def displayallraw(index, outfile):
 	with open("./IBM_Debater_(R)_SLIDE_LREC_2018/idiomLexicon.tsv", "r") as infile:
 		s_scores = []
@@ -195,7 +247,7 @@ def displayallraw(index, outfile):
 			      "neutral" : "g",
 			      "inappropriate" : "y" }
 
-		label = { 0: "pleasantness", 1: "imagery", 2: "activation" }
+		label = { 0: "pleasantness", 1: "activation", 2: "imagery" }
 
 		for line in infile:
 			l = line.split("\t")
@@ -220,9 +272,41 @@ def displayallraw(index, outfile):
 	plt.savefig(outfile)
 
 
-def displaysubset(index, IDIOMS, outfile):
-	with open(IDIOMS, 'r') as infile:
-		idioms = json.load(infile)
+def displaysubset(index, idioms, outfile):
+	# idiomLexicon.json is a json-dumped dictionary
+	# idiom : ((p, i, a), positive_score, sentiment)
+	with open('idiomLexiconScored.json', 'r') as infile:
+		record = json.load(infile)
+
+	s_scores = []
+	d_scores = []
+
+	sentiment = { "positive" : "r",
+		      "negative" : "b",
+		      "neutral" : "g",
+		      "inappropriate" : "y" }
+
+	s_senti = []
+
+	label = { 0: "pleasantness", 1: "imagery", 2: "activation" }
+
+	for idiom in idioms:
+		print(idiom)
+		d = record[idiom][0][index]
+
+		if d is None:
+			continue
+
+		d = float(d)
+
+		s_scores.append(float(record[idiom][1]))
+		d_scores.append(d)
+		s_senti.append(sentiment[record[idiom][2]])
+
+	plt.scatter(s_scores, d_scores, c=s_senti)
+	plt.xlabel('SLIDE positive percent')
+	plt.ylabel('DAL {} index'.format(label[index]))
+	plt.savefig(outfile)
 
 
 
@@ -230,14 +314,7 @@ if __name__ == "__main__":
 	# dal()
 	# parse()
 
-	print(parsepositive())
+	# parsepositive()
 
 
-
-
-
-
-
-
-
-
+	savescore()

@@ -48,16 +48,16 @@ class Graph():
 
 		for idiom in idioms:
 			i = nlp(idiom)
-			self.add(i[0].text, False, idiom={idiom}, isHead=True) # first word is the head node
-			prev = i[0].text
+			self.add(i[0].text.strip(), False, idiom={idiom}, isHead=True) # first word is the head node
+			prev = i[0].text.strip()
 
 			if len(i) == 1:
 				self.nodes[self.index-1].terminal = True
 				continue
 
 			for x in range(1, len(i) - 1):
-				self.add(i[x].text, False, prev, idiom={idiom})
-				prev = i[x].text
+				self.add(i[x].text.strip(), False, prev, idiom={idiom})
+				prev = i[x].text.strip()
 
 			self.add(i[-1], True, prev, idiom={idiom})
 
