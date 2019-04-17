@@ -23,7 +23,7 @@ def displaydict(infile, index):
 	for category in idioms:
 		print(category)
 		slide.displaysubset(index, idioms[category],
-				    '{}_{}_{}.png'.format(name, index, count))
+				    '{}_{}_{}.png'.format(name, index, category))
 		count += 1
 
 
