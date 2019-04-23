@@ -11,11 +11,12 @@ import matplotlib.pyplot as plt
 from nltk.corpus import wordnet as wn
 import json
 import spacy
+import pickle as pkl
 
 
 nlp = spacy.load('en_core_web_sm')
 
-with open('dal.json', 'r') as infile:
+with open('./datasets/dal.json', 'r') as infile:
 	daldict = json.load(infile)
 
 # load DAL
@@ -272,10 +273,10 @@ def displayallraw(index, outfile):
 	plt.savefig(outfile)
 
 
-def displaysubset(index, idioms, outfile):
+def displaysubset(index, idioms, outfile, title):
 	# idiomLexicon.json is a json-dumped dictionary
 	# idiom : ((p, i, a), positive_score, sentiment)
-	with open('idiomLexiconScored.json', 'r') as infile:
+	with open('./datasets/idiomLexiconScored.json', 'r') as infile:
 		record = json.load(infile)
 
 	s_scores = []
@@ -304,6 +305,7 @@ def displaysubset(index, idioms, outfile):
 		s_senti.append(sentiment[record[idiom][2]])
 
 	plt.scatter(s_scores, d_scores, c=s_senti)
+	plt.title(title)
 	plt.xlabel('SLIDE positive percent')
 	plt.ylabel('DAL {} index'.format(label[index]))
 	plt.savefig(outfile)
@@ -317,4 +319,16 @@ if __name__ == "__main__":
 	# parsepositive()
 
 
-	savescore()
+#	savescore()
+
+	with open('./datasets/pos.pkl', 'rb') as ner:
+		data = pkl.load(ner)
+
+	# data is dictionary of named_entity -> [idioms]
+	for x in range(3):
+		for namedent in data:
+			displaysubset(x, data[namedent], 'pos_{}_{}.png'.format(x, namedent), namedent)
+
+
+
+
