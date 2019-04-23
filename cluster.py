@@ -21,7 +21,6 @@ class Graph():
 
 	def add(self, token, terminal, prev="", idiom=None, isHead=False):
 		p = self.indices[prev]
-		
 		if token not in self.indices:
 			self.indices[token] = self.index # create new mapping with current index
 			self.nodes.append(Node(idiom, token, terminal)) # add new token node to list of nodes
@@ -44,12 +43,16 @@ class Graph():
 
 	def load(self, IDIOMS):
 		with open(IDIOMS, 'r') as data:
-			idioms = json.load(IDIOMS)
+			idioms = json.load(data)
 
 		for idiom in idioms:
 			i = nlp(idiom)
+			if len(i) == 0:
+				continue
+
 			self.add(i[0].text.strip(), False, idiom={idiom}, isHead=True) # first word is the head node
 			prev = i[0].text.strip()
+
 
 			if len(i) == 1:
 				self.nodes[self.index-1].terminal = True
@@ -59,13 +62,13 @@ class Graph():
 				self.add(i[x].text.strip(), False, prev, idiom={idiom})
 				prev = i[x].text.strip()
 
-			self.add(i[-1], True, prev, idiom={idiom})
+			self.add(i[-1].text.strip(), True, prev, idiom={idiom})
 
 
 	# DFS implementation to cluster idioms on lexical overlap
 	def cluster(self):
 		clusters = []
-		print(self.heads)
+		#print(self.heads)
 		for head in self.heads:
 			stack = [head] # frontier implemented as stack
 			explored = set()
@@ -74,7 +77,7 @@ class Graph():
 			cluster = set()
 
 			while len(stack):
-				print(stack)
+				#print(stack)
 				node = stack.pop()
 				frontier.remove(node)
 				explored.add(node)
@@ -109,7 +112,7 @@ class Node():
 
 
 	def addidiom(self, idiom):
-		self.idiom.add(idiom)
+		self.idiom |= idiom
 
 
 # returns dictionary of lemmatized words and frequencies throughout entire lexicon
@@ -125,8 +128,8 @@ def count(IDIOMS):
 		for word in doc:
 			words[word.lemma_] += 1
 
-	with open('counts.pkl', 'wb') as n:
-		pkl.dump(words, n)
+	#with open('counts.pkl', 'wb') as n:
+	#	pkl.dump(words, n)
 
 	with open('counts.json', 'w') as n:
 		json.dump(words, n)
@@ -139,16 +142,13 @@ def parse(stop=False):
 	with open("./IBM_Debater_(R)_SLIDE_LREC_2018/idiomLexicon.tsv", "r") as infile:
 		next(infile)
 		idioms = []
-		#count = 0
 		for line in infile:
-			#if count == 25: break;
-			#count += 1
 			l = line.split('\t')
 			if l[11] != "X":
 				sent = nlp(l[0])
 
 				newsent = ""
-				print(sent)
+				#print(l[0])
 				for token in sent:
 					if stop:
 						if not token.is_stop:
@@ -220,27 +220,32 @@ def clusterbyner(IDIOMS):
 
 
 if __name__ == "__main__":
-	print("starting parse")
-	parse()
-	# g = Graph()
-	# print("starting load")
-	# g.load('idioms_sample.json')
-	# print("starting cluster")
-	# print(g.cluster())
-
-	# print(g.indices)
-
 	IDIOMS = 'idioms.json'
 
-	print('starting ner')
-	print(clusterbyner(IDIOMS))
+#	print("starting parse")
+#	print(parse())
+	g = Graph()
+	print("starting load")
+	g.load('idioms.json')
+	print("starting cluster")
+	c = g.cluster()
+#	print(c)
+
+	with open('clusters.pkl', 'wb') as cfile:
+		pkl.dump(c, cfile)
+#
+#	print(g.indices)
+
+
+#	print('starting ner')
+#	print(clusterbyner(IDIOMS))
 
 	#print('starting parse')
 	#IDIOMS = parse()
 
-	print('starting pos')
-	print(clusterbypos(IDIOMS))
+#	print('starting pos')
+#	print(clusterbypos(IDIOMS))
 
-	print('starting count')
-	print(count(IDIOMS))
+#	print('starting count')
+#	print(count(IDIOMS))
 
