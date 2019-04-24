@@ -8,13 +8,14 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.svm import SVC
 from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, recall_score, f1_score, precision_score
 #import pycrfsuite
 import spacy
 #import parsexml
 from collections import Counter, defaultdict
 import os, sys
 import numpy as np
+import joblib as jl
 
 # taken from committed belief paper
 # For the ith word in a sentence, return list of lexical features
@@ -93,7 +94,7 @@ def features(filename):
 				feat[p] = pos[p]
 
 			feats.append(feat)
-			labels.append(label)
+			labels.append(int(label))
 
 	return feats, labels
 
@@ -115,8 +116,9 @@ def svm(X, y, c=1.0):
 	prediction = clf.predict(X[-500:])
 	print(prediction)
 	return (accuracy_score(y[-500:], prediction),
-			recall_score(y[-500:], prediction, average=None),
-			f1_score(y[-500:], prediction, average=None))
+			precision_score(y[-500:], prediction),
+			recall_score(y[-500:], prediction),
+			f1_score(y[-500:], prediction))
 	
 def logreg(X, y):
 	clf = LogisticRegression(class_weight='balanced')
@@ -125,8 +127,9 @@ def logreg(X, y):
 	prediction = clf.predict(X[-500:])
 	print(prediction)
 	return (accuracy_score(y[-500:], prediction),
-			recall_score(y[-500:], prediction, average=None),
-			f1_score(y[-500:], prediction, average=None))
+			precision_score(y[-500:], prediction),
+			recall_score(y[-500:], prediction),
+			f1_score(y[-500:], prediction))
 
 
 def embedfeatures(embeddings, infile):
@@ -160,19 +163,19 @@ def embedfeatures(embeddings, infile):
 
 
 if __name__ == "__main__":
-	print('loading ewedict')
-	ewedict = loadewe('ewe_uni.txt')
+#	print('loading ewedict')
+#	ewedict = loadewe('ewe_uni.txt')
 
-	feats, y = embedfeatures(ewedict, sys.argv[1])
+#	feats, y = embedfeatures(ewedict, sys.argv[1])
 	
 #	y = np.array(labels).reshape(-1, 1)
-#	feats, y = features(sys.argv[1])
+	feats, y = features(sys.argv[1])
 
-#	v = DictVectorizer(sparse=False)
-#	X = v.fit_transform(feats)
+	v = DictVectorizer(sparse=False)
+	X = v.fit_transform(feats)
 	print('running models')
-	scores = [svm(feats, y), logreg(feats, y)]
-	
+#	scores = [svm(feats, y), logreg(feats, y)]
+	scores = [svm(X, y), logreg(X, y)]	
 	print(scores)
 	#for score in scores:
 		#print("Accuracy: %0.2f (+/- %0.2f)" % (score.mean(), score.std() * 2))

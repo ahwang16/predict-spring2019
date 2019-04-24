@@ -216,23 +216,106 @@ def clusterbyner(IDIOMS):
 	return cluster
 
 
+# return list of dictionaries of features for set of idioms
+def clusterfeats(idioms):
+	f = []
+	common = []
+
+	for idiom in idioms:
+		doc = nlp(idiom)
+		isNumeric = False
+		pos = defaultdict(int)
+		postags = ['ADJ', 'ADV', 'INTJ', 'NOUN', 'PROPN', 'VERB',
+			   'ADP', 'AUX', 'CCONJ', 'DET', 'NUM', 'PART',
+			   'PRON', 'SCONJ', 'PUNCT', 'SYM', 'X']
+		for tag in postags:
+			pos[tag] = 0
+		verbType = 'nil'
+		modal = False
+
+		c = set()
+		for x in range(len(doc)):
+			c.add(doc[x].text)
+			isNumeric_, pos_, verbType_, modal_ = lexicalfeats(doc, x)
+
+			isNumeric = isNumeric or isNumeric_
+			pos[pos_] += 1
+			if verbType is not 'nil':
+				verbType = verbType_
+			modal = modal or modal_
+		common.append(c)
+		length, capital, entity = basicfeats(doc)
+
+		feat = {
+			'isNumeric' : isNumeric,
+			'verbType' : verbType,
+			'modal' : modal,
+			'length' : length,
+			'capital' : capital,
+			'entity' : entity
+		}
+
+		for p in pos:
+			feat[p] = pos[p] / length
+
+		f.append(feat)
 
 
+		commonwords = set.intersection(*common)
+	return f, commonwords
+
+
+def lexicalfeats(sent, i):
+	token = sent[i]
+	isNumeric = token.is_digit
+	pos = token.pos_
+	verbType = token.tag_ if token.pos_ == 'VERB' else 'nil'
+	modal = token.tag_ == 'MD'
+
+	return isNumeric, pos, verbType, modal
+
+
+def basicfeats(sent):
+	length = len(sent)
+	cap = 0
+	entity = len(sent.ents)
+
+	for word in sent:
+		if word.shape_[0] == 'X':
+			cap += 1
+
+	cap /= length
+	entity /= length
+
+	return length, cap, entity
 
 if __name__ == "__main__":
 	IDIOMS = 'idioms.json'
 
+	with open('./datasets/clusters.pkl', 'rb') as infile:
+		clusters = pkl.load(infile)
+
+	cf = []
+	for cluster in clusters:
+		f, common = clusterfeats(cluster)
+		print(len(cluster), common, f)
+		cf.append((len(cluster), common, f))	
+	with open('clusterfeats.pkl', 'wb') as outfile:
+		pkl.dump(cf, outfile)
+
+
+
 #	print("starting parse")
 #	print(parse())
-	g = Graph()
-	print("starting load")
-	g.load('idioms.json')
-	print("starting cluster")
-	c = g.cluster()
+#	g = Graph()
+#	print("starting load")
+#	g.load('idioms.json')
+#	print("starting cluster")
+#	c = g.cluster()
 #	print(c)
 
-	with open('clusters.pkl', 'wb') as cfile:
-		pkl.dump(c, cfile)
+#	with open('clusters.pkl', 'wb') as cfile:
+#		pkl.dump(c, cfile)
 #
 #	print(g.indices)
 
