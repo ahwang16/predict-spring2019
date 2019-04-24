@@ -109,28 +109,24 @@ def loadewe(filename):
 
 
 def svm(X, y, c=1.0):
-	clf = SVC(C=c, gamma='auto')
+	clf = SVC(C=c, gamma='auto', class_weight='balanced')
 	#return cross_val_score(clf, X, y, cv=5)
 	clf.fit(X[:-500], y[:-500])
 	prediction = clf.predict(X[-500:])
 	print(prediction)
-	acc = accuracy_score(y[-500:], prediction)
-	print(acc)
-	rec = recall_score(y[-500:], prediction)
-	print(rec)
-	return np.array(accuracy_score(y[-500:], prediction),
-			recall_score(y[-500:], prediction),
-			f1_score(y[-500], prediction))
+	return (accuracy_score(y[-500:], prediction),
+			recall_score(y[-500:], prediction, average=None),
+			f1_score(y[-500:], prediction, average=None))
 	
 def logreg(X, y):
-	clf = LogisticRegression()
+	clf = LogisticRegression(class_weight='balanced')
 	#return cross_val_score(clf, X, y, cv=5)
 	clf.fit(X[:-500], y[:-500])
 	prediction = clf.predict(X[-500:])
 	print(prediction)
-	return np.array(accuracy_score(y[-500:], prediction),
-			recall_score(y[-500:], prediction),
-			f1_score(y[-500], prediction))
+	return (accuracy_score(y[-500:], prediction),
+			recall_score(y[-500:], prediction, average=None),
+			f1_score(y[-500:], prediction, average=None))
 
 
 def embedfeatures(embeddings, infile):
