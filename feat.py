@@ -10,8 +10,7 @@ import spacy
 from collections import Counter, defaultdict
 import os, sys
 import numpy as np
-import joblib as jl
-
+import pickle as pkl
 
 nlp = spacy.load("en")
 
@@ -275,11 +274,11 @@ if __name__ == "__main__":
 #	y = np.array(labels).reshape(-1, 1)
 
 	# python3 feat.py <data_file_name> <isMultiClass> <features> <optional c>
-	feats, y = None
+	X, y = None, None
 	if sys.argv[3] == 'ewedict':
 		with open('./datasets/ewedict.pkl', 'rb') as infile:
 			ewedict = pkl.load(infile)
-		feats, y = embedfeatures(ewedict, sys.argv[1])
+		X, y = embedfeatures(ewedict, sys.argv[1])
 	elif sys.argv[3] == 'lexical':
 		feats, y = features(sys.argv[1])
 		v = DictVectorizer(sparse=False)
@@ -292,9 +291,9 @@ if __name__ == "__main__":
 
 		f_lex, y = features(sys.argv[1])
 		v = DictVectorizer(sparse=False)
-		X = v.fit_transform(feats)
+		X = v.fit_transform(f_lex)
 
-		feats = np.concatenate((f_ewe, f_lex))
+		feats = np.concatenate((f_ewe, X))
 
 
 
@@ -304,10 +303,10 @@ if __name__ == "__main__":
 	# X = v.fit_transform(feats)
 	print('running models')
 	c = 1.0
-	if len(sys.argv) == 6:
-		c = sys.argv[5]
+	if len(sys.argv) == 5:
+		c = sys.argv[4]
 #	scores = [svm(feats, y), logreg(feats, y)]
-	scores = [svm(X, y, c=c, multi=sys.argv[2]), logreg(X, y , multi=sys.argv[2])]	
+	scores = [svm(X, y, c=c, multi=bool(int(sys.argv[2]))), logreg(X, y , multi=bool(int(sys.argv[2])))]	
 	print(scores)
 	#for score in scores:
 		#print("Accuracy: %0.2f (+/- %0.2f)" % (score.mean(), score.std() * 2))
